@@ -74,9 +74,12 @@ function Chats() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    api.get("api/user/allChats").then((Res) => {
-      setAllChat(Res.data);
-    });
+    api
+      .get("api/user/allChats")
+      .then((Res) => {
+        setAllChat(Res.data);
+      })
+      .catch(() => {});
   }, [reloadAllChats]);
 
   const handleChat = (param: TUser): void => {
@@ -87,9 +90,9 @@ function Chats() {
   };
 
   return (
-    <div className="h-full justify-center flex items-center">
+    <div className="h-full justify-center flex items-center !transition-none">
       {allChat.length > 0 ? (
-        <div className="flex flex-col gap-3 w-full h-full">
+        <div className="flex flex-col gap-3 w-full h-full ">
           {allChat?.map((chat?: any) => (
             <div
               onClick={() => handleChat(chat?.user)}
@@ -97,11 +100,11 @@ function Chats() {
             >
               <div className="flex gap-2 items-center">
                 <Avatar rounded={true} data={chat?.user} />
-                <div>
+                <div className="flex flex-col gap-1">
                   <h1 className="text-lg font-normal dark:text-bunker-50 text-bunker-600">
                     {chat?.user?.fullName}
                   </h1>
-                  <p className="text-bunker-400 text-sm">
+                  <p className="text-bunker-400 text-sm truncate">
                     {chat?.message?.text}
                   </p>
                 </div>

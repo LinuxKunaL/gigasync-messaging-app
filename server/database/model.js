@@ -26,17 +26,6 @@ const UserSchema = new Schema({
 
 const ChatSchema = new Schema({
   chatWithin: [{ type: Schema.Types.ObjectId, ref: "User", required: true }],
-  latestMessage: {
-    timestamp: { type: Date, default: Date.now },
-    message: {
-      fileType: { type: String },
-      text: {
-        type: String,
-      },
-    },
-    sender: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    receiver: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  },
   messages: [
     {
       timestamp: { type: Date, default: Date.now },
@@ -79,14 +68,6 @@ const ChatSchema = new Schema({
       },
     },
   ],
-  media: {
-    images: [{ type: String }],
-    videos: [{ type: String }],
-    audios: [{ type: String }],
-    link: [{ type: String }],
-    files: [{ type: String }],
-    voices: [{ type: String }],
-  },
 });
 
 export const ChatModel = mongoose.model("Chat", ChatSchema);

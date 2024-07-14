@@ -5,6 +5,7 @@ import {
   MdApps,
   MdArrowBack,
   MdBackupTable,
+  MdCopyAll,
   MdCss,
   MdDelete,
   MdDomain,
@@ -118,6 +119,14 @@ function ChatDetailsBar({}: any) {
             <h1 className="text-lg font-normal dark:text-bunker-50 text-bunker-600">
               {chatProfileDetails?.userTo?.fullName}
             </h1>
+            <span className="flex items-center text-bunker-400 text-sm gap-4 ">
+              <p className="dark:text-cyan-500 text-cyan-600">
+                @{chatProfileDetails?.userTo?.username}
+              </p>
+              <Icon variant="transparent">
+                <MdCopyAll className=" cursor-pointer" />
+              </Icon>
+            </span>
           </div>
         </div>
         <Dropdown
@@ -167,6 +176,9 @@ function ChatDetailsBar({}: any) {
           </Icon>
         </Dropdown>
       </div>
+      <p className="text-md font-normal dark:text-bunker-300 text-bunker-500">
+        {chatProfileDetails?.userTo?.profile?.about}
+      </p>
       <hr className="dark:border-bunker-800 border-bunker-200" />
       <div className="flex items-center justify-between">
         <span className="text-md font-semibold dark:text-bunker-300 text-bunker-500 flex items-center gap-2">
@@ -242,9 +254,7 @@ function MediaTab({ mediaImages, mediaVideos }: MediaTabProps): JSX.Element {
           ) : (
             <div className="m-auto h-[10pc] flex flex-col gap-3 items-center text-center justify-center">
               <MdImage className="text-2xl text-cyan-400 " />
-              <p className="text-bunker-400 text-sm">
-                You have no images
-              </p>
+              <p className="text-bunker-400 text-sm">You have no images</p>
             </div>
           )}
           <div className="absolute -top-10 -bottom-10 -left-7 z-10 dark:bg-bunker-920 bg-white/80 w-16 blur-[20px]" />
@@ -256,40 +266,42 @@ function MediaTab({ mediaImages, mediaVideos }: MediaTabProps): JSX.Element {
           <MdVideocam className="text-lg text-cyan-500" /> videos
         </span>
         <div className="flex flex-wrap gap-4 relative overflow-hidden">
-          {mediaVideos?.length>0?<Swiper
-            slidesPerView={2.3}
-            grid={{
-              rows: 2,
-              fill: "row",
-            }}
-            spaceBetween={10}
-            pagination={{
-              clickable: true,
-            }}
-            modules={[Grid]}
-            className="mySwiper cursor-move gap-2"
-          >
-            {mediaVideos?.map((url, index) => (
-              <SwiperSlide key={index}>
-                <div className="size-[150px] rounded-lg overflow-hidden border-[1px] border-cyan-400/50 cursor-pointer ">
-                  <video
-                    src={url}
-                    className="rounded-lg h-full object-cover w-full hover:scale-105"
-                    muted
-                    controls={false}
-                  />
-                  <div className="z-10 bg-bunker-900/50 hover:bg-bunker-900/80 flex items-center justify-center top-0 bottom-0 left-0 right-0 size-full absolute">
-                    <MdOutlinePlayCircleOutline className="text-bunker-300 text-3xl" />
+          {mediaVideos?.length > 0 ? (
+            <Swiper
+              slidesPerView={2.3}
+              grid={{
+                rows: 2,
+                fill: "row",
+              }}
+              spaceBetween={10}
+              pagination={{
+                clickable: true,
+              }}
+              modules={[Grid]}
+              className="mySwiper cursor-move gap-2"
+            >
+              {mediaVideos?.map((url, index) => (
+                <SwiperSlide key={index}>
+                  <div className="size-[150px] rounded-lg overflow-hidden border-[1px] border-cyan-400/50 cursor-pointer ">
+                    <video
+                      src={url}
+                      className="rounded-lg h-full object-cover w-full hover:scale-105"
+                      muted
+                      controls={false}
+                    />
+                    <div className="z-10 bg-bunker-900/50 hover:bg-bunker-900/80 flex items-center justify-center top-0 bottom-0 left-0 right-0 size-full absolute">
+                      <MdOutlinePlayCircleOutline className="text-bunker-300 text-3xl" />
+                    </div>
                   </div>
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>:<div className="m-auto h-[10pc] flex flex-col gap-3 items-center text-center justify-center">
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          ) : (
+            <div className="m-auto h-[10pc] flex flex-col gap-3 items-center text-center justify-center">
               <MdVideocam className="text-2xl text-cyan-400 " />
-              <p className="text-bunker-400 text-sm">
-                You have no video
-              </p>
-            </div>}
+              <p className="text-bunker-400 text-sm">You have no video</p>
+            </div>
+          )}
           <div className="absolute -top-10 -bottom-10 -left-7 z-10 dark:bg-bunker-920 bg-white/80 w-16 blur-[20px]" />
           <div className="absolute -top-10 -bottom-10 -right-7 z-10 dark:bg-bunker-920 bg-white/80 w-16 blur-[20px]" />
         </div>

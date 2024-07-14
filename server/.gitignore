@@ -37,3 +37,9 @@ coverage/
 # Miscellaneous
 *.swp
 *.swo
+
+# IDE files
+.vscode/
+.idea/
+
+/server/src/data/user-*

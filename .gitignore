@@ -37,3 +37,6 @@ coverage/
 # Miscellaneous
 *.swp
 *.swo
+
+# inner file
+/server/src/data/user-*

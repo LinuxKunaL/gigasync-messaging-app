@@ -115,19 +115,21 @@ const getAllChat = async (req, res) => {
           chatWithin: { $all: [user.id] },
         },
         {
-          "latestMessage.message": 1,
+          messages: 1,
           _id: 0,
         }
       );
       return {
-        message: getMessages?.latestMessage?.message,
+        message:
+          getMessages?.messages[getMessages?.messages.length - 1]?.message,
         user,
       };
     })
   );
 
-  console.log(modifiedChats);
-
+  if (allChats.length <= 0) {
+    return res.status(404).send([]);
+  }
   return res.status(200).send(modifiedChats);
 };
 
@@ -151,7 +153,9 @@ const getChatWithinData = async (req, res) => {
         );
       }
       if (msg.message.file.type === "video") {
-        media.videos.push(`http://localhost:1000/api/default/messageVideo/user-${msg.sender._id}/videos/${msg.message.file.name}`);
+        media.videos.push(
+          `http://localhost:1000/api/default/messageVideo/user-${msg.sender._id}/videos/${msg.message.file.name}`
+        );
       }
     });
 
@@ -161,6 +165,7 @@ const getChatWithinData = async (req, res) => {
       fullName: 1,
       avatarColor: 1,
       isAvatar: 1,
+      profile: 1,
     });
 
     return res.status(200).send({ media, userTo });

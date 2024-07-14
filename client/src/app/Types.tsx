@@ -6,6 +6,15 @@ export type TUser = {
   avatarColor?: string;
   status?: string;
   lastSeen?: string;
+  profile?: {
+    privacy: {
+      profilePhoto?: boolean;
+      about?: boolean;
+      status?: boolean;
+    };
+    about?: string;
+    avatar?: string;
+  };
 };
 
 export type TMessages = {

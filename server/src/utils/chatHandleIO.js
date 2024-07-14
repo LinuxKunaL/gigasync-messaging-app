@@ -13,7 +13,6 @@ class ChatHandleIO {
     const { me, to, message, socketId, replyMessage } = data;
     const { file } = message;
 
-    console.log(data);
     var fileData = {
       size: null,
       type: null,
@@ -47,20 +46,6 @@ class ChatHandleIO {
     if (!chat) {
       const newMessage = await ChatModel.create({
         chatWithin: [me, to],
-        latestMessage: {
-          message: {
-            fileType: fileData.type ? file.type : "text",
-            text: message.text,
-          },
-          sender: me,
-          receiver: to,
-        },
-        // media: {
-        //   images: fileData.type === "image" ? fileData.data : null,
-        //   videos: fileData.type === "video" ? fileData.data : null,
-        //   documents: fileData.type === "document" ? fileData.data : null,
-        //   audios: fileData.type === "audio" ? fileData.data : null,
-        // },
       });
 
       newMessage.messages.push({
@@ -96,13 +81,6 @@ class ChatHandleIO {
       return null;
     }
 
-    // chat.media = {
-    //   images: fileData.type === "image" ? fileData.data : null,
-    //   videos: fileData.type === "video" ? fileData.data : null,
-    //   documents: fileData.type === "document" ? fileData.data : null,
-    //   audios: fileData.type === "audio" ? fileData.data : null,
-    // }
-
     chat.messages.push({
       message: {
         file: {
@@ -117,19 +95,10 @@ class ChatHandleIO {
       replyMessage,
     });
 
-    chat.latestMessage = {
-      message: {
-        fileType: fileData.type ? file.type : "text",
-        text: message.text,
-      },
-      sender: me,
-      receiver: to,
-    };
-
     await chat.save();
 
     const populatedChat = await chat.populate({
-      path: "chatWithin latestMessage.sender messages.sender messages.receiver messages.replyMessage.to",
+      path: "chatWithin messages.sender messages.receiver messages.replyMessage.to",
       select: "fullName username avatarColor isAvatar",
       options: { strictPopulate: false },
     });
@@ -140,6 +109,43 @@ class ChatHandleIO {
     this.io.to(receiverSocketId).emit("receiveMessage", newMessage);
     this.io.to(socketId).emit("receiveMessage", newMessage);
     this.io.to(receiverSocketId).emit("NewMessageNotification", newMessage);
+  }
+
+  async deleteMessage(data) {
+    const { sender, receiver, messageId } = data;
+
+    const _receiver = await User.findById(receiver);
+    const _receiverSocketId = _receiver ? _receiver.socketId : null;
+
+    await ChatModel.findOneAndUpdate(
+      {
+        chatWithin: { $all: [sender, receiver] },
+        "messages._id": messageId,
+      },
+      {
+        $set: {
+          "messages.$.message.text": "message deleted",
+          "messages.$.message.file.type": "del",
+          "messages.$.message.file.name": null,
+          "messages.$.message.file.size": null,
+        },
+      },
+      {
+        new: true,
+      }
+    );
+
+    this.selectContact({
+      me: sender,
+      to: receiver,
+      socketId: data.socketId,
+    });
+
+    this.selectContact({
+      me: receiver,
+      to: sender,
+      socketId: _receiverSocketId,
+    });
   }
 
   async selectContact(data) {
@@ -155,6 +161,7 @@ class ChatHandleIO {
       select: "fullName username avatarColor isAvatar",
       options: { strictPopulate: false },
     });
+
     this.io
       .to(data.socketId)
       .emit("initialMessage", !chats ? [] : chats.messages);
@@ -208,6 +215,9 @@ class ChatHandleIO {
       );
       socket.on("register", (userId) => this.register(userId, socket.id));
       socket.on("disconnect", () => this.unRegister(socket.id));
+      socket.on("deleteMessage", (data) =>
+        this.deleteMessage({ ...data, socketId: socket.id })
+      );
     });
   }
 }

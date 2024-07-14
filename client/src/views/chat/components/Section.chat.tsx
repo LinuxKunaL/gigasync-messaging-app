@@ -34,6 +34,8 @@ import {
   MdArrowDropDown,
   MdReplay,
   MdReply,
+  MdCopyAll,
+  MdContentCopy,
 } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { setChatDetails, insertCurrentChatData } from "../../../app/Redux";
@@ -46,9 +48,7 @@ import Avatar from "../../../components/interface/Avatar";
 import { TMessages, TUser } from "../../../app/Types";
 import socket from "../../../app/Socket";
 import ReactPlayer from "react-player";
-import ReactHlsPlayer from "react-hls-player";
 import api from "../../../utils/api";
-import { toastSuccess } from "../../../app/Toast";
 
 type Props = {};
 
@@ -135,9 +135,14 @@ function ChatBody({ selectedContactId, myProfile }: TChatBody) {
   });
   const [loadUserData, setLoadUserData] = useState<number>(0);
   const [messageLoading, setMessageLoading] = useState<Boolean>(false);
+  const [messageContextMenu, setMessageContextMenu] = useState<any>({
+    visible: false,
+    data: "",
+  });
   const RSendImagePreview = useRef<HTMLImageElement>(null);
   const RSendVideoPreview = useRef<HTMLVideoElement>(null);
   const RChatBody = useRef<HTMLDivElement>(null);
+  const RMessageContextMenu = useRef<HTMLDivElement>(null);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -231,6 +236,8 @@ function ChatBody({ selectedContactId, myProfile }: TChatBody) {
     });
 
     setMessage("");
+
+    setReplyMessage({ visible: false, data: null });
   };
 
   const handleKeyDown = (e: any): void => {
@@ -334,6 +341,10 @@ function ChatBody({ selectedContactId, myProfile }: TChatBody) {
     a.click();
   };
 
+  const deleteMessage = (param: any) => {
+    socket.emit("deleteMessage", param);
+  };
+
   return (
     <div className="dark:bg-bunker-950 h-full w-full flex flex-col relative">
       <div className="h-full w-full flex flex-col overflow-y-auto no-scrollbar z-10">
@@ -413,51 +424,86 @@ function ChatBody({ selectedContactId, myProfile }: TChatBody) {
           className="flex flex-col w-full h-full p-6 relative mb-24 overflow-scroll no-scrollbar"
         >
           {chatMessages?.length > 0 ? (
-            <div className="w-full h-full flex flex-col">
+            <div className="w-full h-full flex flex-col gap-5">
               {chatMessages?.map((message: TMessages) => (
                 <div
                   key={message?._id}
-                  className={`flex flex-row gap-4 ${
+                  className={`flex flex-col relative ${
                     myProfile._id === message?.sender?._id
                       ? "flex-row-reverse"
                       : "justify-start"
                   }`}
                 >
-                  <Dropdown
-                    options={[
-                      {
-                        element: (
-                          <div className="flex gap-1 items-center">
-                            <MdDelete /> delete
-                          </div>
-                        ),
-                      },
-                      {
-                        element: (
-                          <div
-                            onClick={() =>
+                  <div
+                    className={` flex flex-col gap-1 relative ${
+                      myProfile._id === message?.sender?._id
+                        ? "flex-row-reverse self-end"
+                        : "justify-start self-start"
+                    }`}
+                  >
+                    <span className="dark:text-bunker-200/70 text-bunker-600 text-xs flex justify-between items-center">
+                      {convertTime(message?.timestamp as any, "day")}
+                      <Dropdown
+                        options={[
+                          {
+                            element: (
+                              <div className="flex gap-1 items-center">
+                                <MdDelete /> delete
+                              </div>
+                            ),
+                            onClick() {
+                              deleteMessage({
+                                messageId: message?._id,
+                                receiver: message?.receiver._id,
+                                sender: message?.sender._id,
+                              });
+                            },
+                          },
+                          {
+                            element: (
+                              <div className="flex gap-1 items-center">
+                                <MdContentCopy /> copy
+                              </div>
+                            ),
+                          },
+                          {
+                            element: (
+                              <div className="flex gap-1 items-center">
+                                <MdReply /> reply
+                              </div>
+                            ),
+                            onClick() {
                               setReplyMessage({
                                 visible: message?.message.text ? true : false,
                                 data: message?.message.text ? message : null,
-                              })
-                            }
-                            className="flex gap-1 items-center"
-                          >
-                            <MdReply /> reply
-                          </div>
-                        ),
-                      },
-                    ]}
-                    placement="left"
-                  >
+                              });
+                            },
+                          },
+                        ]}
+                        placement={
+                          myProfile._id === message?.sender?._id
+                            ? "right"
+                            : "left"
+                        }
+                        className={
+                          myProfile._id === message?.sender?._id
+                            ? "right-1"
+                            : "left-7"
+                        }
+                      >
+                        <MdMoreVert className="text-lg cursor-pointer" />
+                      </Dropdown>
+                    </span>
                     <div
-                      className={`p-3 flex flex-col gap-2 mt-3 
+                      className={`p-4 flex flex-col gap-2 overflow-hidden
                           ${
                             myProfile._id === message?.sender?._id
-                              ? "rounded-l-xl rounded-b-xl dark:bg-cyan-700 bg-cyan-400"
-                              : "rounded-r-xl rounded-b-xl dark:bg-bunker-900 bg-bunker-100"
+                              ? "rounded-l-xl rounded-b-xl dark:bg-cyan-700 bg-cyan-400 self-end"
+                              : "rounded-r-xl rounded-b-xl dark:bg-bunker-900 bg-bunker-100 self-start"
                           } ${
-                        message.message.text.length < 30 ? "" : "w-[40pc]"
+                        message.message.text.length < 25
+                          ? "w-[9pc]"
+                          : "w-[40pc]"
                       }`}
                     >
                       {message.message.file.type === "image" ? (
@@ -510,7 +556,7 @@ function ChatBody({ selectedContactId, myProfile }: TChatBody) {
                               : "dark:bg-bunker-700 bg-bunker-200"
                           } ${
                             message.replyMessage.message.text.length < 30
-                              ? ""
+                              ? "w-[10pc]"
                               : "w-[40pc]"
                           }  p-2 rounded-md`}
                         >
@@ -522,14 +568,17 @@ function ChatBody({ selectedContactId, myProfile }: TChatBody) {
                           </p>
                         </div>
                       ) : null}
-                      <p className="w-[400px] contents dark:text-bunker-200 text-bunker-700">
+                      <p
+                        className={`dark:text-bunker-200 text-bunker-700 ${
+                          message.message.file.type === "del"
+                            ? " opacity-70 italic"
+                            : ""
+                        }`}
+                      >
                         {message.message.text}
-                        <span className="dark:text-bunker-200/70 text-bunker-600 text-xs">
-                          {convertTime(message?.timestamp as any, "day")}
-                        </span>
                       </p>
                     </div>
-                  </Dropdown>
+                  </div>
                 </div>
               ))}
               {messageLoading ? (
@@ -783,7 +832,7 @@ function ChatBody({ selectedContactId, myProfile }: TChatBody) {
                 ),
               },
             ]}
-            placement="top"
+            placement="bottom"
           >
             <Icon variant="transparent">
               <MdAttachment />
