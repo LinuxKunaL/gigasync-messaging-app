@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import config from "../../config/config.js";
+import fs from "fs";
 
 import { User } from "../../database/model.js";
 import { exec } from "child_process";
@@ -45,12 +46,18 @@ const register = async (req, res) => {
       const isUsername = await User.findOne({ username: req.body.username });
       if (!isUsername) {
         const user = await User.create(req.body);
+
+        if (!fs.existsSync(`/server/src/data`)) {
+          exec("mkdir src/data");
+        }
+
         exec(`mkdir src/data/user-${user._id}`, (err, stdout, stderr) => {
           if (err) console.log(err);
           exec(
             `cd src/data/user-${user._id} && mkdir audios documents images videos recordings`
           );
         });
+
         return res.send("User created successfully");
       } else {
         return res.status(400).send("Username already exists");
