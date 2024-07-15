@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 
 type Props = {
   variant: "filled" | "outlined" | "transparent" | "active";
@@ -37,4 +37,4 @@ function Icon({ variant, children, className, onClick, active }: Props) {
   );
 }
 
-export default Icon;
+export default memo(Icon);

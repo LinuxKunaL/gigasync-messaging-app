@@ -1,24 +1,18 @@
-import React, { useEffect } from "react";
-import SideBar from "./components/Bar.side";
-import ContentBar from "./components/bar.content";
-import ChatSection from "./components/Section.chat";
-import ChatDetailsBar from "./components/Bar.chatDetails";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import api from "../../utils/api";
 import { handleCatchError } from "../../utils/ErrorHandle";
 import { insertData } from "../../app/Redux";
+
+import SideBar from "./components/Bar.side";
+import ContentBar from "./components/bar.content";
+import ChatSection from "./components/chat.section/index";
+import ChatDetailsBar from "./components/Bar.chatDetails";
+import api from "../../utils/api";
 import socket from "../../app/Socket";
-import { TMessages, TUser } from "../../app/Types";
-import { toastNotification } from "../../app/Toast";
 
 type Props = {};
 
 function Main({}: Props) {
-  const SChatDetails = useSelector((state: any) => state.chatDetails);
-  const SLoadAccountData = useSelector(
-    (state: any) => state.loadUserAccountData
-  );
-  const SCurrentChat: TUser = useSelector((state: any) => state.currentChat);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -33,26 +27,21 @@ function Main({}: Props) {
         });
       })
       .catch((Err) => handleCatchError(Err));
-  }, [dispatch, SLoadAccountData]);
+  }, [dispatch]);
 
-  useEffect(() => {
-    socket.on("NewMessageNotification", (message: TMessages) => {
-      if (!SCurrentChat._id) {
-        toastNotification(message);
-      }
-    });
-    return () => {
-      socket.off("NewMessageNotification");
-    };
-  }, [SCurrentChat]);
   return (
     <div className="h-full flex flex-row">
       <SideBar />
       <ContentBar />
       <ChatSection />
-      {SChatDetails.visible ? <ChatDetailsBar /> : null}
+      <ChatDetails />
     </div>
   );
 }
 
 export default Main;
+
+function ChatDetails() {
+  const SChatDetails = useSelector((state: any) => state.chatDetails);
+  return SChatDetails.visible ? <ChatDetailsBar /> : null;
+}

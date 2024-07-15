@@ -2,19 +2,14 @@ import { useEffect, useState } from "react";
 import Icon from "../../../components/interface/Icon";
 import {
   MdAndroid,
-  MdApps,
   MdArrowBack,
   MdBackupTable,
   MdCopyAll,
   MdCss,
   MdDelete,
-  MdDomain,
   MdDownload,
-  MdFileCopy,
   MdHtml,
   MdImage,
-  MdInfo,
-  MdInfoOutline,
   MdInsertPhoto,
   MdJavascript,
   MdKeyboardVoice,
@@ -23,35 +18,32 @@ import {
   MdOutlineBlock,
   MdOutlineDocumentScanner,
   MdOutlineFavorite,
-  MdOutlineFileOpen,
   MdOutlineFilePresent,
   MdOutlineNotifications,
   MdOutlinePlayCircleOutline,
   MdPictureAsPdf,
   MdPlayArrow,
-  MdRoundaboutLeft,
   MdVideocam,
-  MdVoiceChat,
-  MdVoiceOverOff,
 } from "react-icons/md";
 import Switch from "../../../components/interface/Switch";
 import { Link } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Grid } from "swiper/modules";
 import { useDispatch, useSelector } from "react-redux";
+import { FaInbox } from "react-icons/fa";
+import { setChatDetails } from "../../../app/Redux";
+import { handleCatchError } from "../../../utils/ErrorHandle";
+import { TUser } from "../../../app/Types";
 
 import "swiper/css";
 import "swiper/css/grid";
 import "swiper/css/pagination";
+
 import Dropdown from "../../../components/interface/Dropdown";
-import { FaInbox } from "react-icons/fa";
+import Avatar from "../../../components/interface/Avatar";
 import ToolTip from "../../../components/interface/Tooltip";
-import { setChatDetails } from "../../../app/Redux";
 import TabNavigation from "../../../components/interface/TabNavigation";
 import api from "../../../utils/api";
-import { handleCatchError } from "../../../utils/ErrorHandle";
-import { TUser } from "../../../app/Types";
-import Avatar from "../../../components/interface/Avatar";
 
 type modifiedLinkTypes = {
   link: string;
@@ -162,14 +154,13 @@ function ChatDetailsBar({}: any) {
               element: (
                 <div className="flex items-center justify-between gap-2">
                   <label className="text-md font-semibold dark:text-bunker-300 text-bunker-500 flex items-center gap-2 cursor-pointer">
-                    <MdOutlineBlock className="text-lg text-cyan-500" /> Delete
-                    chat
+                    <MdDelete className="text-lg text-cyan-500" /> Delete chat
                   </label>
                 </div>
               ),
             },
           ]}
-          placement="left"
+          placement="right"
         >
           <Icon variant="transparent">
             <MdMoreVert />

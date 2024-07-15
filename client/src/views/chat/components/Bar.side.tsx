@@ -1,31 +1,46 @@
 import cleanLogo from "../../../assets/images/cleanLogo.png";
 
 import {
+  MdMenu,
   MdLogout,
   MdFavoriteBorder,
   MdOutlineContacts,
   MdOutlineFileCopy,
   MdOutlineSpaceDashboard,
-  MdBarChart,
-  MdMenu,
 } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
-import { changeContent } from "../../../app/Redux";
-
-import ThemeToggle from "../../../components/interface/ThemeToggle";
 import { FaRegUserCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { changeContent } from "../../../app/Redux";
+import { useEffect } from "react";
+import { toastNotification } from "../../../app/Toast";
+import { TMessages, TUser } from "../../../app/Types";
+
+import ThemeToggle from "../../../components/interface/ThemeToggle";
 import Icon from "../../../components/interface/Icon";
+import socket from "../../../app/Socket";
 
 type Props = {};
 
 function SideBar({}: Props) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const SCurrentChat: TUser = useSelector((state: any) => state.currentChat);
 
   const changeContentBarState = useSelector(
     (state: any) => state.changeContentBar
   );
+
+  useEffect(() => {
+    socket.on("NewMessageNotification", (message: TMessages) => {
+      if (!SCurrentChat._id) {
+        toastNotification(message);
+      }
+    });
+    return () => {
+      socket.off("NewMessageNotification");
+    };
+  }, []);
 
   const listOfTabs = [
     {

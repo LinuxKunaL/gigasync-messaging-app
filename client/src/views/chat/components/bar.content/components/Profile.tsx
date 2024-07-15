@@ -1,15 +1,13 @@
-import React, { useEffect, useRef, useState } from "react";
-import Avatar from "../../../../../components/interface/Avatar";
+import React, { useEffect, useState } from "react";
 import { MdCopyAll, MdEdit, MdSave } from "react-icons/md";
+import { handleCatchError } from "../../../../../utils/ErrorHandle";
+import { toastSuccess } from "../../../../../app/Toast";
+import { useSelector } from "react-redux";
+
 import Icon from "../../../../../components/interface/Icon";
 import Switch from "../../../../../components/interface/Switch";
 import ToolTip from "../../../../../components/interface/Tooltip";
-import { useDispatch, useSelector } from "react-redux";
 import api from "../../../../../utils/api";
-import { handleCatchError } from "../../../../../utils/ErrorHandle";
-import { toastError, toastSuccess } from "../../../../../app/Toast";
-import { load } from "../../../../../app/Redux";
-import clsx from "clsx";
 
 type Props = {};
 type ProfileData = {
@@ -35,7 +33,6 @@ function Profile({}: Props) {
   const [modifiedData, setModifiedData] = useState<ProfileData>({});
   const [avatar, setAvatar] = useState<any>();
 
-  const dispatch = useDispatch();
   const profileData: ProfileData = useSelector(
     (state: any) => state.UserAccountData
   );
@@ -57,7 +54,7 @@ function Profile({}: Props) {
       )
       .then((Response) => {
         if (Response.data.success) {
-          dispatch(load());
+          window.location.reload();
           toastSuccess("Profile Updated");
         }
       })

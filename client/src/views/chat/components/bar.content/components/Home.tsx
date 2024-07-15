@@ -7,6 +7,9 @@ import {
   MdGroupAdd,
   MdMessage,
 } from "react-icons/md";
+import { TUser } from "../../../../../app/Types";
+import { useDispatch } from "react-redux";
+import { insertCurrentChatData } from "../../../../../app/Redux";
 
 import Input from "../../../../../components/interface/Input";
 import Icon from "../../../../../components/interface/Icon";
@@ -15,9 +18,6 @@ import Contacts from "../components/Contacts";
 import ToolTip from "../../../../../components/interface/Tooltip";
 import api from "../../../../../utils/api";
 import Avatar from "../../../../../components/interface/Avatar";
-import { TUser } from "../../../../../app/Types";
-import { useDispatch, useSelector } from "react-redux";
-import { insertCurrentChatData } from "../../../../../app/Redux";
 
 type Props = {};
 
@@ -84,9 +84,11 @@ function Chats() {
 
   const handleChat = (param: TUser): void => {
     const { _id, username, fullName, avatarColor, isAvatar } = param;
+
     dispatch(
       insertCurrentChatData({ username, _id, fullName, avatarColor, isAvatar })
     );
+
   };
 
   return (
