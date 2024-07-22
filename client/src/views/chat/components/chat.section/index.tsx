@@ -1,45 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
 
-import {
-  MdMic,
-  MdSend,
-  MdSearch,
-  MdClose,
-  MdMoreVert,
-  MdAttachment,
-  MdOutlineCall,
-  MdEmojiEmotions,
-  MdFavoriteBorder,
-  MdOutlineImage,
-  MdOutlineAudioFile,
-  MdOutlineVideocam,
-  MdOutlineVideoFile,
-  MdOutlineDocumentScanner,
-  MdOutlineSupervisedUserCircle,
-  MdCallEnd,
-  MdCall,
-  MdMicExternalOff,
-  MdMicOff,
-  MdTimelapse,
-  MdTimer10,
-  MdVideoCall,
-  MdVideocamOff,
-  MdOutlineMessage,
-  MdOutlineFileDownload,
-  MdPlayArrow,
-  MdDownload,
-  MdTimer,
-  MdOutlineAccessTime,
-  MdDelete,
-  MdArrowDropDown,
-  MdReplay,
-  MdReply,
-  MdCopyAll,
-  MdContentCopy,
-} from "react-icons/md";
-import { useDispatch, useSelector } from "react-redux";
-import EmojiPicker from "emoji-picker-react";
-import ReactPlayer from "react-player";
+import { useSelector } from "react-redux";
 import { TUser } from "../../../../app/Types";
 import Body from "./components/Body";
 import PhoneChat from "../../../../assets/svgs/PhoneChat";

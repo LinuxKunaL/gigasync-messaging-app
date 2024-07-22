@@ -2,9 +2,11 @@ type Props = {
   data?: any;
   border?: boolean;
   rounded?: boolean;
+  className?: string;
+  size?: string;
 };
 
-function Avatar({ data, border, rounded }: Props) {
+function Avatar({ data, border, rounded, className, size }: Props) {
   const colorVariant: any = {
     red: "to-red-600 from-red-400 border-red-400",
     blue: "to-blue-600 from-blue-400 border-blue-400",
@@ -28,7 +30,7 @@ function Avatar({ data, border, rounded }: Props) {
 
   return (
     <div
-      className={`size-14 border-2 ${
+      className={`size-14 border- ${className} ${size} ${
         colorVariant[data?.avatarColor]
       } select-none ${
         rounded ? "rounded-full" : "rounded-lg"
@@ -44,7 +46,7 @@ function Avatar({ data, border, rounded }: Props) {
         />
       ) : (
         <div
-          className={`size-14 select-none bg-gradient-to-bl ${
+          className={`size-14 ${size} select-none bg-gradient-to-bl ${
             rounded ? "rounded-full" : "rounded-lg"
           } flex items-center justify-center text-bunker-50 font-semibold relative overflow-hidden ${
             colorVariant[data?.avatarColor]

@@ -17,7 +17,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
   maxHttpBufferSize: 1e8,
   cors: {
-    origin: "http://localhost:3000",
+    origin:"*",
     methods: ["GET", "POST"],
   },
 });

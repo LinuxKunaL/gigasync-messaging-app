@@ -32,7 +32,6 @@ function Chats({ props }: Props) {
   useEffect(() => {
     socket.on("initialMessage", (OldMessage) => {
       setChatMessages(OldMessage);
-      console.log("OldMessage");
     });
 
     socket.on("receiveMessage", (receivedMessage) => {

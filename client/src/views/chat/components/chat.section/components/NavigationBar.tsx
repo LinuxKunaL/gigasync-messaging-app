@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Avatar from "../../../../../components/interface/Avatar";
 import convertTime from "../../../../../utils/ConvertTime";
 import {
@@ -9,14 +9,17 @@ import {
   MdOutlineVideocam,
   MdSearch,
 } from "react-icons/md";
-import ToolTip from "../../../../../components/interface/Tooltip";
-import Icon from "../../../../../components/interface/Icon";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   insertCurrentChatData,
+  setCallState,
   setChatDetails,
 } from "../../../../../app/Redux";
 import { TUser } from "../../../../../app/Types";
+
+import ToolTip from "../../../../../components/interface/Tooltip";
+import Icon from "../../../../../components/interface/Icon";
+import Call from "./VideoCall";
 
 type Props = {
   props: {
@@ -63,17 +66,29 @@ function NavigationBar({ props }: Props) {
           <MdSearch />
         </Icon>
         <Icon
-          // onClick={() => setIsVideoCallVisible(!isVideoCallVisible)}
+          onClick={() =>
+            dispatch(
+              setCallState({
+                do: { video: { visible: true, data: props?.selectedContact } },
+              })
+            )
+          }
           variant="transparent"
         >
           <MdOutlineVideocam />
         </Icon>
-        <Icon
-          // onClick={() => setIsVoiceCallVisible(!isVoiceCallVisible)}
+        {/* <Icon
+          onClick={() =>
+            dispatch(
+              setCallState({
+                do: { voice: { visible: true, data: props?.selectedContact } },
+              })
+            )
+          }
           variant="transparent"
         >
           <MdOutlineCall />
-        </Icon>
+        </Icon> */}
         <Icon
           onClick={() => {
             dispatch(

@@ -1,18 +1,18 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 
-import Register from "./views/Register";
 import Login from "./views/Login";
+import Register from "./views/Register";
 import Main from "./views/chat/Main";
 
-import "./index.css";
 import { Toaster } from "react-hot-toast";
 import ProtectRoute from "./components/security/ProtectRoute";
+import "./index.css";
 
 type Props = {};
 
-function App({}: Props) {
+function App({ }: Props) {
   const themeRefresh = useSelector((state: any) => state.themeRefresh);
   useEffect(() => {
     const theme = localStorage.getItem("theme");

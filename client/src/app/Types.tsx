@@ -44,3 +44,21 @@ export type TMessages = {
   };
   _id?: string;
 };
+
+type TCall = {
+  video: {
+    visible: boolean;
+    data: TUser;
+    signal: RTCSessionDescriptionInit;
+  };
+  voice: {
+    visible: boolean;
+    data: TUser;
+    signal: RTCSessionDescriptionInit;
+  };
+};
+
+export type TCallStates = {
+  do: TCall;
+  pick: TCall;
+};

@@ -167,6 +167,55 @@ class ChatHandleIO {
       .emit("initialMessage", !chats ? [] : chats.messages);
   }
 
+  async sendIceCandidate(data) {
+    const { to, candidate, from } = data;
+    const { socketId } = await User.findById(to);
+    this.io.to(socketId).emit("OnIncomingIceCandidate", { from, candidate });
+  }
+
+  async callUser(data) {
+    const { from, to, signal } = data;
+
+    const { socketId } = await User.findById(to);
+
+    const user = await User.findById(from);
+    console.log(user.username);
+    this.io.to(socketId).emit("OnIncomingCall", { signal, user });
+  }
+
+  async callAnswered(data) {
+    const { signal, to } = data;
+    const { socketId } = await User.findById(to);
+    this.io.to(socketId).emit("OnCallAnswered", { signal });
+  }
+
+  async callCancel(data) {
+    // call-cancel
+    const { to } = data;
+    const { socketId, fullName } = await User.findById(to);
+
+    this.io.to(socketId).emit("OnCallCanceled", { fullName });
+  }
+
+  async callReject(data) {
+    // call-reject
+    const { to } = data;
+    const { socketId } = await User.findById(to);
+    this.io.to(socketId).emit("OnCallRejected");
+  }
+
+  async callEnd(data) {
+    const { to } = data;
+    const { socketId } = await User.findById(to);
+    this.io.to(socketId).emit("OnCallEnd");
+  }
+
+  async callToggleCamera(data) {
+    const { to, isTrackEnabled } = data;
+    const { socketId } = await User.findById(to);
+    this.io.to(socketId).emit("OnToggleCamera", { isTrackEnabled });
+  }
+
   async emitStatus(socketId) {
     const userForSocketId = await User.findOne({ socketId });
 
@@ -218,6 +267,13 @@ class ChatHandleIO {
       socket.on("deleteMessage", (data) =>
         this.deleteMessage({ ...data, socketId: socket.id })
       );
+      socket.on("send-ice-candidate", (data) => this.sendIceCandidate(data));
+      socket.on("call-user", (data) => this.callUser(data));
+      socket.on("call-cancel", (data) => this.callCancel(data));
+      socket.on("call-answered", (data) => this.callAnswered(data));
+      socket.on("call-reject", (data) => this.callReject(data));
+      socket.on("call-end", (data) => this.callEnd(data));
+      socket.on("call-toggle-camera", (data) => this.callToggleCamera(data));
     });
   }
 }
