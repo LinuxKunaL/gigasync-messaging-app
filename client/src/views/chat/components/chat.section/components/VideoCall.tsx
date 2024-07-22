@@ -135,12 +135,12 @@ function VideoCall({ props }: { props: TCallStates }) {
     if (callAnswered || incomingCallAnswered) {
       if (RMyVideo.current) {
         if (!RMyVideo.current.srcObject) {
-          return (RMyVideo.current.srcObject = MyStream as MediaStream);
+           RMyVideo.current.srcObject = MyStream as MediaStream
         }
       }
       if (RPeerVideo.current) {
         if (!RPeerVideo.current.srcObject) {
-          return (RPeerVideo.current.srcObject = PeerStream as MediaStream);
+           RPeerVideo.current.srcObject = PeerStream as MediaStream
         }
       }
     }
