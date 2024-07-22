@@ -103,13 +103,12 @@ function VideoCall({ props }: { props: TCallStates }) {
     };
 
     const handleToggleCamera = ({ isTrackEnabled }: any) => {
-      setCameraTurnOf({
-        ...cameraTurnOf,
+      setCameraTurnOf(prevState => ({
+        ...prevState,
         peer: isTrackEnabled,
-      });
-
-      console.log("isTrackEnabled", cameraTurnOf);
+      }));
     };
+
     socket.on("OnCallEnd", handleCallEnd);
     socket.on("OnToggleCamera", handleToggleCamera);
     socket.on("OnCallAnswered", handleCallAnswered);
@@ -135,12 +134,12 @@ function VideoCall({ props }: { props: TCallStates }) {
     if (callAnswered || incomingCallAnswered) {
       if (RMyVideo.current) {
         if (!RMyVideo.current.srcObject) {
-           RMyVideo.current.srcObject = MyStream as MediaStream
+          RMyVideo.current.srcObject = MyStream as MediaStream;
         }
       }
       if (RPeerVideo.current) {
         if (!RPeerVideo.current.srcObject) {
-           RPeerVideo.current.srcObject = PeerStream as MediaStream
+          RPeerVideo.current.srcObject = PeerStream as MediaStream;
         }
       }
     }
@@ -294,6 +293,7 @@ function VideoCall({ props }: { props: TCallStates }) {
       }
     }
   };
+
   console.log(cameraTurnOf);
   return (
     <div className="w-full h-full flex justify-center items-center fixed bg-bunker-300/50 dark:bg-bunker-950/60 top-0 left-0 right-0 bottom-0 z-50">
