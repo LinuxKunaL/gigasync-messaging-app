@@ -216,6 +216,13 @@ class ChatHandleIO {
     this.io.to(socketId).emit("OnToggleCamera", { isTrackEnabled });
   }
 
+  async callToggleMic(data) {
+    const { to, isTrackEnabled } = data;
+    const { socketId } = await User.findById(to);
+    console.log(isTrackEnabled);
+    this.io.to(socketId).emit("OnToggleMic", { isTrackEnabled });
+  }
+
   async emitStatus(socketId) {
     const userForSocketId = await User.findOne({ socketId });
 
@@ -274,6 +281,7 @@ class ChatHandleIO {
       socket.on("call-reject", (data) => this.callReject(data));
       socket.on("call-end", (data) => this.callEnd(data));
       socket.on("call-toggle-camera", (data) => this.callToggleCamera(data));
+      socket.on("call-toggle-mic", (data) => this.callToggleMic(data));
     });
   }
 }

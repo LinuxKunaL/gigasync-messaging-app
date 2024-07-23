@@ -9,7 +9,7 @@ import {
 
 import { useDispatch, useSelector } from "react-redux";
 import { setCallState } from "../../../../../app/Redux";
-import { TCallStates, TUser } from "../../../../../app/Types";
+import { TCallStates } from "../../../../../app/Types";
 import { toastError } from "../../../../../app/Toast";
 
 import Avatar from "../../../../../components/interface/Avatar";
@@ -21,10 +21,15 @@ function VideoCall({ props }: { props: TCallStates }) {
   const SUserProfile = useSelector((state: any) => state.UserAccountData);
 
   const [callAnswered, setCallAnswered] = useState<Boolean>(false);
-  const [cameraTurnOf, setCameraTurnOf] = useState({
+  const [cameraTurnOff, setcameraTurnOff] = useState({
     my: true,
     peer: true,
   });
+  const [micTurnOff, setMicTurnOff] = useState({
+    my: true,
+    peer: true,
+  });
+
   const [incomingCallAnswered, setIncomingCallAnswered] =
     useState<Boolean>(false);
   const [MyStream, setMyStream] = useState<MediaStream | any>();
@@ -103,7 +108,14 @@ function VideoCall({ props }: { props: TCallStates }) {
     };
 
     const handleToggleCamera = ({ isTrackEnabled }: any) => {
-      setCameraTurnOf(prevState => ({
+      return setcameraTurnOff((prevState) => ({
+        ...prevState,
+        peer: isTrackEnabled,
+      }));
+    };
+
+    const handleToggleMic = ({ isTrackEnabled }: any) => {
+      return setMicTurnOff((prevState) => ({
         ...prevState,
         peer: isTrackEnabled,
       }));
@@ -111,6 +123,7 @@ function VideoCall({ props }: { props: TCallStates }) {
 
     socket.on("OnCallEnd", handleCallEnd);
     socket.on("OnToggleCamera", handleToggleCamera);
+    socket.on("OnToggleMic", handleToggleMic);
     socket.on("OnCallAnswered", handleCallAnswered);
     socket.on("OnCallRejected", handleCallRejected);
     socket.on("OnIncomingIceCandidate", handleIncomingIceCandidate);
@@ -118,6 +131,7 @@ function VideoCall({ props }: { props: TCallStates }) {
     return () => {
       socket.off("OnCallEnd", handleCallEnd);
       socket.off("OnToggleCamera", handleToggleCamera);
+      socket.off("OnToggleMic", handleToggleMic);
       socket.off("OnCallAnswered", handleCallAnswered);
       socket.off("OnCallRejected", handleCallRejected);
       socket.off("OnIncomingIceCandidate", handleIncomingIceCandidate);
@@ -143,7 +157,7 @@ function VideoCall({ props }: { props: TCallStates }) {
         }
       }
     }
-  }, [callAnswered, incomingCallAnswered, cameraTurnOf]);
+  }, [callAnswered, incomingCallAnswered, cameraTurnOff]);
 
   useEffect(() => {
     if (PeerStream) {
@@ -274,7 +288,7 @@ function VideoCall({ props }: { props: TCallStates }) {
         videoTracks.forEach((track: any) => {
           track.enabled = !track.enabled;
           isTrackEnabled = track.enabled;
-          setCameraTurnOf({ ...cameraTurnOf, my: track.enabled });
+          setcameraTurnOff({ ...cameraTurnOff, my: track.enabled });
         });
       }
 
@@ -294,7 +308,34 @@ function VideoCall({ props }: { props: TCallStates }) {
     }
   };
 
-  console.log(cameraTurnOf);
+  const handleToggleMic = () => {
+    if (MyStream) {
+      var isMicEnabled;
+      const audioTracks = MyStream.getAudioTracks();
+      if (audioTracks.length > 0) {
+        audioTracks.forEach((track: any) => {
+          track.enabled = !track.enabled;
+          isMicEnabled = track.enabled;
+          setMicTurnOff({ ...micTurnOff, my: track.enabled });
+        });
+      }
+
+      if (props.do.video.visible) {
+        socket.emit("call-toggle-mic", {
+          to: props.do.video.data._id,
+          isTrackEnabled: isMicEnabled,
+        });
+      }
+
+      if (!props.do.video.visible) {
+        socket.emit("call-toggle-mic", {
+          to: props.pick.video.data._id,
+          isTrackEnabled: isMicEnabled,
+        });
+      }
+    }
+  };
+
   return (
     <div className="w-full h-full flex justify-center items-center fixed bg-bunker-300/50 dark:bg-bunker-950/60 top-0 left-0 right-0 bottom-0 z-50">
       {props?.do.video?.visible && !callAnswered ? (
@@ -304,10 +345,7 @@ function VideoCall({ props }: { props: TCallStates }) {
             autoPlay
             loop
           />
-          <Avatar
-            data={props.do?.video?.data}
-            className="size-[16pc] rounded-md"
-          />
+          <Avatar data={props.do?.video?.data} size="size-[16pc]" />
           <div className="flex flex-col justify-between items-center dark:bg-bunker-910 bg-bunker-100 p-4 rounded-md gap-4 w-full">
             <span className="dark:text-bunker-200 text-bunker-600 text-md flex flex-col gap-1 items-center">
               Video calling to
@@ -327,7 +365,7 @@ function VideoCall({ props }: { props: TCallStates }) {
         <div className="p-4 rounded-md flex flex-col items-center justify-center gap-4">
           <div className="relative">
             <div className="w-[45pc] h-[33pc] overflow-hidden border-2 border-bunker-300/50 dark:border-bunker-700/60 rounded-md">
-              {cameraTurnOf.peer ? (
+              {cameraTurnOff.peer ? (
                 <video
                   className="rounded-md shadow-xl w-full"
                   autoPlay
@@ -342,9 +380,12 @@ function VideoCall({ props }: { props: TCallStates }) {
                   </p>
                 </div>
               )}
+              {micTurnOff.peer ? null : (
+                <MdMicOff className="text-red-400 size-7 absolute right-2 bottom-2" />
+              )}
             </div>
             <div className="absolute left-5 bottom-5 border-[1px] border-bunker-300/50 dark:border-bunker-700/60 rounded-md">
-              {cameraTurnOf.my ? (
+              {cameraTurnOff.my ? (
                 <video
                   className="rounded-md shadow-xl size-[12pc] object-cover"
                   autoPlay
@@ -359,11 +400,18 @@ function VideoCall({ props }: { props: TCallStates }) {
                   </p>
                 </div>
               )}
+              {micTurnOff.my ? null : (
+                <MdMicOff className="text-red-400 size-7 absolute right-2 bottom-2" />
+              )}
             </div>
           </div>
           <div className="flex relative gap-3 items-center w-full justify-center p-3 dark:bg-bunker-910 bg-bunker-100 rounded-md">
             <CallTimer />
-            <Icon variant="transparent">
+            <Icon
+              active={!micTurnOff.my}
+              onClick={handleToggleMic}
+              variant="transparent"
+            >
               <MdMicOff />
             </Icon>
             <div className="flex items-center gap-4">
@@ -376,7 +424,11 @@ function VideoCall({ props }: { props: TCallStates }) {
                 <MdCallEnd className="text-red-500 size-6" />
               </div>
             </div>
-            <Icon onClick={() => handleToggleVideo()} variant="transparent">
+            <Icon
+              active={!cameraTurnOff.my}
+              onClick={handleToggleVideo}
+              variant="transparent"
+            >
               <MdVideocamOff />
             </Icon>
             <p className="dark:text-bunker-400 text-bunker-700 font-semibold absolute right-4">
@@ -439,7 +491,7 @@ function VideoCall({ props }: { props: TCallStates }) {
         <div className="p-4 rounded-md flex flex-col items-center justify-center gap-4">
           <div className="relative">
             <div className="w-[45pc] h-[33pc] overflow-hidden border-2 border-bunker-300/50 dark:border-bunker-700/60 rounded-md">
-              {cameraTurnOf.peer ? (
+              {cameraTurnOff.peer ? (
                 <video
                   className="rounded-md shadow-xl w-full"
                   autoPlay
@@ -454,9 +506,12 @@ function VideoCall({ props }: { props: TCallStates }) {
                   </p>
                 </div>
               )}
+              {micTurnOff.peer ? null : (
+                <MdMicOff className="text-red-400 size-7 absolute right-2 bottom-2" />
+              )}
             </div>
             <div className="absolute left-5 bottom-5 border-[1px] border-bunker-300/50 dark:border-bunker-700/60 rounded-md">
-              {cameraTurnOf.my ? (
+              {cameraTurnOff.my ? (
                 <video
                   className="rounded-md shadow-xl size-[12pc] object-cover"
                   autoPlay
@@ -471,11 +526,18 @@ function VideoCall({ props }: { props: TCallStates }) {
                   </p>
                 </div>
               )}
+              {micTurnOff.my ? null : (
+                <MdMicOff className="text-red-400 size-7 absolute right-2 bottom-2" />
+              )}
             </div>
           </div>
           <div className="flex relative gap-3 items-center w-full justify-center p-3 dark:bg-bunker-910 bg-bunker-100 rounded-md">
             <CallTimer />
-            <Icon variant="transparent">
+            <Icon
+              active={!micTurnOff.my}
+              onClick={handleToggleMic}
+              variant="transparent"
+            >
               <MdMicOff />
             </Icon>
             <div className="flex items-center gap-4">
@@ -488,7 +550,11 @@ function VideoCall({ props }: { props: TCallStates }) {
                 <MdCallEnd className="text-red-500 size-6" />
               </div>
             </div>
-            <Icon onClick={() => handleToggleVideo()} variant="transparent">
+            <Icon
+              active={!cameraTurnOff.my}
+              onClick={handleToggleVideo}
+              variant="transparent"
+            >
               <MdVideocamOff />
             </Icon>
             <p className="dark:text-bunker-400 text-bunker-700 font-semibold absolute right-4">
