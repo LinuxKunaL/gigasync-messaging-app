@@ -70,5 +70,66 @@ const ChatSchema = new Schema({
   ],
 });
 
+const groupsSchema = new Schema({
+  groupDetails: {
+    name: { type: String, unique: true },
+    description: { type: String },
+  },
+  createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+  groupAdmin: { type: Schema.Types.ObjectId, ref: "User" },
+  groupMembers: [{ type: Schema.Types.ObjectId, ref: "User" }],
+  groupSetting: {
+    privacy: {
+      isPhotoAllowed: { type: Boolean, default: true },
+      isVideoAllowed: { type: Boolean, default: true },
+      isChatAllowed: { type: Boolean, default: true },
+    },
+  },
+  avatar: { type: String },
+  createdAt: { type: Date, default: Date.now },
+  groupChats: [
+    {
+      timestamp: { type: Date, default: Date.now },
+      message: {
+        file: {
+          type: {
+            type: String,
+          },
+          name: {
+            type: String,
+          },
+          size: {
+            type: Number,
+          },
+        },
+        text: {
+          type: String,
+        },
+      },
+      sender: { type: Schema.Types.ObjectId, ref: "User", required: true },
+      replyMessage: {
+        to: { type: Schema.Types.ObjectId, ref: "User" },
+        message: {
+          file: {
+            type: {
+              type: String,
+            },
+            name: {
+              type: String,
+            },
+            size: {
+              type: Number,
+            },
+          },
+          text: {
+            type: String,
+          },
+        },
+      },
+    },
+  ],
+});
+
 export const ChatModel = mongoose.model("Chat", ChatSchema);
 export const User = mongoose.model("User", UserSchema);
+export const groups = mongoose.model("groups", groupsSchema);

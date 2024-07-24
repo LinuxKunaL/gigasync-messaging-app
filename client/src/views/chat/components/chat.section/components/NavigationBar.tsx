@@ -1,15 +1,13 @@
-import React, { useState } from "react";
 import Avatar from "../../../../../components/interface/Avatar";
 import convertTime from "../../../../../utils/ConvertTime";
 import {
   MdClose,
   MdMoreVert,
   MdOutlineAccessTime,
-  MdOutlineCall,
   MdOutlineVideocam,
   MdSearch,
 } from "react-icons/md";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import {
   insertCurrentChatData,
   setCallState,
@@ -19,7 +17,6 @@ import { TUser } from "../../../../../app/Types";
 
 import ToolTip from "../../../../../components/interface/Tooltip";
 import Icon from "../../../../../components/interface/Icon";
-import Call from "./VideoCall";
 
 type Props = {
   props: {

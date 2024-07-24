@@ -55,6 +55,7 @@ function Body() {
               visible: true,
               data: data.user,
               signal: data.signal,
+              streamSetting: data.streamSetting,
             },
           },
         })

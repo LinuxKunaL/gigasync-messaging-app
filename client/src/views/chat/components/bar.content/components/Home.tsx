@@ -6,9 +6,11 @@ import {
   MdDoneAll,
   MdGroupAdd,
   MdMessage,
+  MdAdd,
+  MdPerson,
 } from "react-icons/md";
-import { TUser } from "../../../../../app/Types";
-import { useDispatch } from "react-redux";
+import { TGroups, TUser } from "../../../../../app/Types";
+import { useDispatch, useSelector } from "react-redux";
 import { insertCurrentChatData } from "../../../../../app/Redux";
 
 import Input from "../../../../../components/interface/Input";
@@ -18,6 +20,11 @@ import Contacts from "../components/Contacts";
 import ToolTip from "../../../../../components/interface/Tooltip";
 import api from "../../../../../utils/api";
 import Avatar from "../../../../../components/interface/Avatar";
+import Button from "../../../../../components/interface/Button";
+import ModalWindow from "../../../../../components/interface/ModalWindow";
+import { toastSuccess, toastWarning } from "../../../../../app/Toast";
+import { handleCatchError } from "../../../../../utils/ErrorHandle";
+import { group } from "console";
 
 type Props = {};
 
@@ -88,7 +95,6 @@ function Chats() {
     dispatch(
       insertCurrentChatData({ username, _id, fullName, avatarColor, isAvatar })
     );
-
   };
 
   return (
@@ -131,43 +137,264 @@ function Chats() {
     </div>
   );
 }
-
+type TUserList = {
+  users: TUser[];
+  visible: Boolean;
+};
 function Groups() {
+  const [isLayoutVisible, setIsLayoutVisible] = useState<Boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [groupDetails, setGroupDetails] = useState({
+    name: "",
+    description: "",
+  });
+  const [isUsersList, setIsUsersList] = useState<TUserList>({
+    users: [],
+    visible: false,
+  });
+  const [groupMembers, setGroupMembers] = useState<TUser[]>([]);
+  const [listGroups, setListGroups] = useState<TGroups[]>([]);
+
+  useEffect(() => {
+    api
+      .post("api/user/group", { operation: "getAll" })
+      .then((res) => {
+        setListGroups(res.data);
+      })
+      .catch((err) => handleCatchError(err));
+  }, []);
+
+  const handleSearchContact = () => {
+    api
+      .post("api/user/profile/search", { query: searchQuery })
+      .then((res) => {
+        setIsUsersList((pre) => ({ ...pre, users: res.data }));
+      })
+      .then((Err) => console.log(Err));
+  };
+
+  const handleAddMember = (param: TUser): void => {
+    setGroupMembers([...groupMembers, param]);
+    setIsUsersList((pre: any) => ({ ...pre, visible: false }));
+  };
+
+  const handleCreateGroup = () => {
+    if (!(groupMembers.length > 0)) return toastWarning("Please add members");
+
+    if (!groupDetails.name) return toastWarning("Please add group name");
+
+    if (!groupDetails.description)
+      return toastWarning("Please add group description");
+
+    api
+      .post("api/user/group", {
+        operation: "create",
+        groupDetails,
+        groupMembers,
+      })
+      .then(() => {
+        toastSuccess("Group created");
+        setIsLayoutVisible(false);
+        setGroupDetails({
+          name: "",
+          description: "",
+        });
+        setGroupMembers([]);
+      })
+      .catch((err) => handleCatchError(err));
+  };
+
   return (
     <>
       <div className="flex justify-between items-center">
         <h1 className="text-xl font-semibold dark:text-bunker-300">groups</h1>
         <ToolTip id="add-contact" className="z-10" content="create group">
-          <Icon variant="transparent">
+          <Icon
+            onClick={() => setIsLayoutVisible(!isLayoutVisible)}
+            variant="transparent"
+          >
             <MdGroupAdd />
           </Icon>
         </ToolTip>
       </div>
-      <div className="flex flex-row justify-between py-4 px-4 hover:dark:bg-bunker-900/60 hover:bg-bunker-100/70 rounded-lg cursor-pointer">
-        <div className="flex gap-2 items-center">
-          <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTcRgjzzQv2TyMVCpn9xl27f0ziyDhkQVxqzA&s"
-            alt=""
-            className="size-14 rounded-full border-[3px] border-cyan-400/70"
-          />
-          <div>
-            <h1 className="text-lg font-normal dark:text-bunker-50 text-bunker-600">
-              college friends
-            </h1>
-            <p className="text-bunker-400 text-sm">
-              <p className="flex items-center gap-2 dark:text-bunker-300 text-bunker-600">
-                120 members
-                <div className="size-1 rounded-full dark:bg-bunker-600 bg-bunker-300" />
-                3 online
+      {listGroups?.map((group) => (
+        <div className="flex flex-row justify-between py-4 px-4 hover:dark:bg-bunker-900/60 hover:bg-bunker-100/70 rounded-lg cursor-pointer">
+          <div className="flex gap-2 items-center">
+            <Avatar rounded={true} data={group} />
+            <div>
+              <h1 className="text-lg font-normal dark:text-bunker-50 text-bunker-600">
+                {group.groupDetails?.name}
+              </h1>
+              <p className="text-bunker-400 text-sm">
+                <p className="flex items-center gap-2 dark:text-bunker-300 text-bunker-600">
+                  {group?.groupMembers?.length} members
+                  <div className="size-1 rounded-full dark:bg-bunker-600 bg-bunker-300" />
+                  3 online
+                </p>
               </p>
-            </p>
+            </div>
+          </div>
+          <div className="flex flex-col justify-between items-end gap-1">
+            <p className="text-sm text-bunker-400">11:30 AM</p>
+            <MdDoneAll className="size-6 text-cyan-400" />
           </div>
         </div>
-        <div className="flex flex-col justify-between items-end gap-1">
-          <p className="text-sm text-bunker-400">11:30 AM</p>
-          <MdDoneAll className="size-6 text-cyan-400" />
-        </div>
-      </div>
+      ))}
+      {isLayoutVisible ? (
+        <ModalWindow>
+          <div className="flex h-[30pc] relative flex-col gap-3 p-5 dark:bg-bunker-910 bg-bunker-100 rounded-md justify-between">
+            <div className="flex flex-col gap-3 h-full">
+              <div className="flex gap-2 items-center justify-between">
+                <p className="text-lg font-semibold dark:text-bunker-300 text-bunker-500">
+                  create groups
+                </p>
+                <Icon
+                  onClick={() => setIsLayoutVisible(!isLayoutVisible)}
+                  variant="transparent"
+                >
+                  <MdClose />
+                </Icon>
+              </div>
+              <div className="flex flex-row items-center w-full gap-2">
+                <div className="size-16 bg-bunker-900 rounded-full" />
+                <Input
+                  onChange={(e) =>
+                    setGroupDetails({ ...groupDetails, name: e.target.value })
+                  }
+                  placeholder="Group Name"
+                  className="w-max"
+                />
+              </div>
+              <div className="flex flex-col gap-3">
+                <Input
+                  onChange={(e) =>
+                    setGroupDetails({
+                      ...groupDetails,
+                      description: e.target.value,
+                    })
+                  }
+                  placeholder="Group Description"
+                />
+              </div>
+              <div className="flex flex-col gap-3 overflow-y-auto h-[13pc]">
+                {groupMembers?.map((user) => (
+                  <div
+                    key={user._id}
+                    className="flex flex-row  justify-between items-center py-4 px-4 hover:dark:bg-bunker-900/60 hover:bg-bunker-100/70 rounded-lg cursor-pointer"
+                  >
+                    <div className="flex gap-2 items-center">
+                      <Avatar rounded={true} data={user} />
+                      <div>
+                        <h1 className="text-lg font-normal dark:text-bunker-50 text-bunker-600">
+                          {user.fullName}
+                        </h1>
+                        <p className="text-bunker-400 text-sm">
+                          @{user.username}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col justify-between items-end gap-1">
+                      <Icon variant="transparent">
+                        <MdClose />
+                      </Icon>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button type="primary" onClick={handleCreateGroup}>
+                Create
+              </Button>
+              <Button
+                type="secondary"
+                onClick={() =>
+                  setIsUsersList((pre: any) => ({
+                    ...pre,
+                    visible: !pre.visible,
+                  }))
+                }
+              >
+                Add members
+              </Button>
+            </div>
+            {isUsersList?.visible ? (
+              <ModalWindow>
+                <div className="flex h-2/4 relative flex-col gap-3 p-5 dark:bg-bunker-910 bg-bunker-100 rounded-md">
+                  <div className="flex gap-2 items-center justify-between">
+                    <p className="text-lg font-semibold dark:text-bunker-300 text-bunker-500">
+                      Add Member
+                    </p>
+                    <Icon
+                      onClick={() =>
+                        setIsUsersList((pre: any) => ({
+                          ...pre,
+                          visible: !pre.visible,
+                        }))
+                      }
+                      variant="transparent"
+                    >
+                      <MdClose />
+                    </Icon>
+                  </div>
+                  <div className="flex flex-row gap-3">
+                    <Input
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      type="search"
+                      placeholder="Search contacts ex @username"
+                    />
+                    <Button
+                      onClick={handleSearchContact}
+                      className="!w-max"
+                      type="primary"
+                    >
+                      search
+                    </Button>
+                  </div>
+                  <div className="h-full w-full flex flex-col gap-3">
+                    {isUsersList?.users?.length > 0 ? (
+                      isUsersList.users.map((user) => (
+                        <div
+                          key={user._id}
+                          className="flex flex-row  justify-between items-center py-4 px-4 hover:dark:bg-bunker-900/60 hover:bg-bunker-100/70 rounded-lg cursor-pointer"
+                        >
+                          <div className="flex gap-2 items-center">
+                            <Avatar rounded={true} data={user} />
+                            <div>
+                              <h1 className="text-lg font-normal dark:text-bunker-50 text-bunker-600">
+                                {user.fullName}
+                              </h1>
+                              <p className="text-bunker-400 text-sm">
+                                @{user.username}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex flex-col justify-between items-end gap-1">
+                            <Icon
+                              onClick={() => handleAddMember(user)}
+                              variant="transparent"
+                            >
+                              <MdAdd />
+                            </Icon>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="m-auto flex flex-col gap-3 items-center text-center">
+                        <MdPerson className="text-2xl text-cyan-400 " />
+                        <p className="text-bunker-400 text-sm">
+                          you can add members by searching <br /> them from the
+                          search bar
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </ModalWindow>
+            ) : null}
+          </div>
+        </ModalWindow>
+      ) : null}
     </>
   );
 }

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  group,
   getAllChat,
   profileUpdate,
   searchProfiles,
@@ -17,5 +18,6 @@ router.post("/profile/search", searchProfiles);
 router.post("/profile/getById", getProfileData);
 router.post("/getChatWithinData", getChatWithinData);
 router.get("/allChats", getAllChat);
+router.post("/group", group);
 
 export default router;

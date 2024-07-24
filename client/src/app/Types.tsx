@@ -17,6 +17,25 @@ export type TUser = {
   };
 };
 
+export type TGroups = {
+  _id?: string;
+  groupDetails?: {
+    name?: string;
+    description?: string;
+  };
+  createdBy?: TUser;
+  groupAdmin?: TUser;
+  groupMembers?: TUser[];
+  groupSetting?: {
+    privacy: {
+      isPhotoAllowed?: boolean;
+      isVideoAllowed?: boolean;
+      isChatAllowed?: boolean;
+    };
+  };
+  avatar?: string;
+};
+
 export type TMessages = {
   message: {
     file: {
@@ -50,11 +69,19 @@ type TCall = {
     visible: boolean;
     data: TUser;
     signal: RTCSessionDescriptionInit;
+    streamSetting: {
+      width: number;
+      height: number;
+    };
   };
   voice: {
     visible: boolean;
     data: TUser;
     signal: RTCSessionDescriptionInit;
+    streamSetting: {
+      width: number;
+      height: number;
+    };
   };
 };
 

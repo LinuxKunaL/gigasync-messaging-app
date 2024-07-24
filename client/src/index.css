@@ -86,3 +86,12 @@ html {
 .ss {
   box-shadow: inset 1px 1px 40px rgb(0, 0, 0);
 }
+
+/* div#content-bar {
+  width: calc(300px / 2);
+} */
+
+/* .ssss {
+  width: calc(640px / 3.5);
+  height: calc(480px / 3.5);
+} */

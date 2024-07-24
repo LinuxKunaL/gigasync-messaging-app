@@ -6,7 +6,7 @@ type Props = {
   size?: string;
 };
 
-function Avatar({ data, border, rounded, className, size }: Props) {
+function Avatar({ data, rounded, className, size }: Props) {
   const colorVariant: any = {
     red: "to-red-600 from-red-400 border-red-400",
     blue: "to-blue-600 from-blue-400 border-blue-400",

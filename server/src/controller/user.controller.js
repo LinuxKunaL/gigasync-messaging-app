@@ -1,4 +1,4 @@
-import { ChatModel, User } from "../../database/model.js";
+import { ChatModel, groups, User } from "../../database/model.js";
 
 const profileUpdate = async (req, res) => {
   await User.findByIdAndUpdate(req.body._id, { ...req.body })
@@ -174,7 +174,50 @@ const getChatWithinData = async (req, res) => {
   }
 };
 
+const group = async (req, res) => {
+  const { userId } = req;
+  const { operation } = req.body;
+
+  if (operation === "getAll") {
+    const myGroups = await groups.find({ createdBy: userId }).populate({
+      path: "groupMembers createdBy",
+      select: "fullName username avatarColor isAvatar status lastSeen",
+    });
+
+    const imInGroups = await groups
+      .find({
+        groupMembers: { $in: [userId] },
+      })
+      .populate({
+        path: "groupMembers createdBy",
+        select: "fullName username avatarColor isAvatar status lastSeen",
+      });
+
+    return res.status(200).send([...myGroups, ...imInGroups]);
+  }
+  if (operation === "create") {
+    const { groupDetails, groupMembers } = req.body;
+
+    try {
+      await groups.create({
+        groupDetails,
+        groupMembers,
+        createdBy: userId,
+      });
+
+      return res.status(200).send({ success: true });
+    } catch (error) {
+      if (error.code === 11000) {
+        return res.status(406).send("Group with same name exists");
+      }
+    }
+  }
+  if (operation === "update") {
+  }
+};
+
 export {
+  group,
   getAllChat,
   profileUpdate,
   searchProfiles,

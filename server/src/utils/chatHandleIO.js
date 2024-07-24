@@ -174,19 +174,20 @@ class ChatHandleIO {
   }
 
   async callUser(data) {
-    const { from, to, signal } = data;
+    const { from, to, signal, streamSetting } = data;
 
     const { socketId } = await User.findById(to);
-
     const user = await User.findById(from);
-    console.log(user.username);
-    this.io.to(socketId).emit("OnIncomingCall", { signal, user });
+
+    this.io
+      .to(socketId)
+      .emit("OnIncomingCall", { signal, user, streamSetting });
   }
 
   async callAnswered(data) {
-    const { signal, to } = data;
+    const { signal, to, streamSetting } = data;
     const { socketId } = await User.findById(to);
-    this.io.to(socketId).emit("OnCallAnswered", { signal });
+    this.io.to(socketId).emit("OnCallAnswered", { signal, streamSetting });
   }
 
   async callCancel(data) {

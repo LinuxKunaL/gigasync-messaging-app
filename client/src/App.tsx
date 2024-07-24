@@ -12,7 +12,7 @@ import "./index.css";
 
 type Props = {};
 
-function App({ }: Props) {
+function App({}: Props) {
   const themeRefresh = useSelector((state: any) => state.themeRefresh);
   useEffect(() => {
     const theme = localStorage.getItem("theme");
