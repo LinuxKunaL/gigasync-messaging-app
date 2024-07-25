@@ -43,3 +43,4 @@ coverage/
 .idea/
 
 /server/src/data/user-*
+/server/src/data/group-*
