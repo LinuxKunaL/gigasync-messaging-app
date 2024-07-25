@@ -1,4 +1,12 @@
 import { ChatModel, groups, User } from "../../database/model.js";
+import { exec } from "child_process";
+import fs from "fs";
+import multer from "multer";
+import path, { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const profileUpdate = async (req, res) => {
   await User.findByIdAndUpdate(req.body._id, { ...req.body })
@@ -174,35 +182,41 @@ const getChatWithinData = async (req, res) => {
   }
 };
 
-const group = async (req, res) => {
+const groupCreate = async (req, res) => {
   const { userId } = req;
-  const { operation } = req.body;
+  const upload = multer().any();
 
-  if (operation === "getAll") {
-    const myGroups = await groups.find({ createdBy: userId }).populate({
-      path: "groupMembers createdBy",
-      select: "fullName username avatarColor isAvatar status lastSeen",
-    });
-
-    const imInGroups = await groups
-      .find({
-        groupMembers: { $in: [userId] },
-      })
-      .populate({
-        path: "groupMembers createdBy",
-        select: "fullName username avatarColor isAvatar status lastSeen",
-      });
-
-    return res.status(200).send([...myGroups, ...imInGroups]);
-  }
-  if (operation === "create") {
-    const { groupDetails, groupMembers } = req.body;
-
+  upload(req, res, async (err) => {
     try {
-      await groups.create({
+      const { groupDetails, groupMembers } = req.body;
+      const { files } = req;
+
+      const group = await groups.create({
         groupDetails,
         groupMembers,
         createdBy: userId,
+      });
+
+      fs.mkdirSync(
+        `src/data/group-${group._id}`,
+        { recursive: true },
+        (err) => {
+          if (err) console.log(err);
+        }
+      );
+
+      exec(
+        `cd src/data/group-${group._id} && mkdir audios documents images videos recordings`
+      );
+
+      const filepathWithNewName = path.join(
+        __dirname,
+        `../data/group-${group._id}`,
+        "Avatar.jpg"
+      );
+
+      fs.writeFile(filepathWithNewName, files[0].buffer, (err) => {
+        if (err) console.log(err);
       });
 
       return res.status(200).send({ success: true });
@@ -211,14 +225,72 @@ const group = async (req, res) => {
         return res.status(406).send("Group with same name exists");
       }
     }
+  });
+
+  // if (operation === "getGroup") {
+  //
+  // }
+};
+
+const groupList = async (req, res) => {
+  const { userId } = req;
+  try {
+    const myGroups = await groups
+      .find(
+        { createdBy: userId },
+        { groupDetails: 1, groupMembers: 1, avatar: 1, createdBy: 0 }
+      )
+      .populate({
+        path: "createdBy",
+        select: "fullName username avatarColor isAvatar status lastSeen",
+      });
+
+    const imInGroups = await groups
+      .find(
+        {
+          groupMembers: { $in: [userId] },
+        },
+        { groupDetails: 1, groupMembers: 1, avatar: 1, createdBy: 0 }
+      )
+      .populate({
+        path: "createdBy",
+        select: "fullName username avatarColor isAvatar status lastSeen",
+      });
+
+    return res.status(200).send([...myGroups, ...imInGroups]);
+  } catch (error) {
+    return res
+      .status(500)
+      .send("Internal Server Error file in user.controller");
   }
-  if (operation === "update") {
+};
+
+const groupGetById = async (req, res) => {
+  const { _id } = req.body;
+  try {
+    const group = await groups.findOne({ _id }).populate({
+      path: "createdBy",
+      select: "fullName username avatarColor isAvatar status lastSeen",
+    });
+    if (!group) {
+      return res.status(404).send("Group not found");
+    }
+    return res.status(200).send({
+      ...group.toObject(),
+      groupMembersLength: group.groupMembers.length,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .send("Internal Server Error file in user.controller");
   }
 };
 
 export {
-  group,
+  groupList,
+  groupCreate,
   getAllChat,
+  groupGetById,
   profileUpdate,
   searchProfiles,
   getProfileData,

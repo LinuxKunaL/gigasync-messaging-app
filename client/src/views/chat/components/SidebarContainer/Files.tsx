@@ -1,6 +1,4 @@
 import { useState } from "react";
-import Icon from "../../../../../components/interface/Icon";
-import Input from "../../../../../components/interface/Input";
 
 import {
   MdCss,
@@ -17,8 +15,10 @@ import {
   MdPictureAsPdf,
   MdOutlineDocumentScanner,
 } from "react-icons/md";
+import Icon from "../../../../components/interface/Icon";
+import Input from "../../../../components/interface/Input";
+import Dropdown from "../../../../components/interface/Dropdown";
 
-import Dropdown from "../../../../../components/interface/Dropdown";
 
 type Props = {};
 

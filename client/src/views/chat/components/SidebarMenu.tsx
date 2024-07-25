@@ -22,7 +22,7 @@ import socket from "../../../app/Socket";
 
 type Props = {};
 
-function SideBar({}: Props) {
+function SidebarMenu({}: Props) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const SCurrentChat: TUser = useSelector((state: any) => state.currentChat);
@@ -135,4 +135,4 @@ function SideBar({}: Props) {
   );
 }
 
-export default SideBar;
+export default SidebarMenu;

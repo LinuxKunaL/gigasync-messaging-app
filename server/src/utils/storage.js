@@ -10,6 +10,7 @@ const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, path.join(__dirname, `../data/user-${req.body._id}`));
   },
+
   filename: function (req, file, cb) {
     const ext = path.extname(file.originalname) + ".jpg";
     cb(null, "Avatar" + ext);

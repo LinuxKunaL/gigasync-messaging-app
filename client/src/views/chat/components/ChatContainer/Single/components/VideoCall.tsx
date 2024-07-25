@@ -8,14 +8,14 @@ import {
 } from "react-icons/md";
 
 import { useDispatch, useSelector } from "react-redux";
-import { setCallState } from "../../../../../app/Redux";
-import { TCallStates } from "../../../../../app/Types";
-import { toastError } from "../../../../../app/Toast";
+import { setCallState } from "../../../../../../app/Redux";
+import { TCallStates } from "../../../../../../app/Types";
+import { toastError } from "../../../../../../app/Toast";
 
-import Avatar from "../../../../../components/interface/Avatar";
-import socket from "../../../../../app/Socket";
-import Icon from "../../../../../components/interface/Icon";
-import ModalWindow from "../../../../../components/interface/ModalWindow";
+import Avatar from "../../../../../../components/interface/Avatar";
+import socket from "../../../../../../app/Socket";
+import Icon from "../../../../../../components/interface/Icon";
+import ModalWindow from "../../../../../../components/interface/ModalWindow";
 
 type TMediaStream = {
   stream?: MediaStream;

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import Icon from "../../../../../components/interface/Icon";
 import { MdClose, MdSearch, MdStar } from "react-icons/md";
-import Input from "../../../../../components/interface/Input";
+import Icon from "../../../../components/interface/Icon";
+import Input from "../../../../components/interface/Input";
 
 type Props = {};
 

@@ -63,6 +63,16 @@ const currentChatSlice = createSlice({
   },
 });
 
+const currentGroupChatSlice = createSlice({
+  initialState: {},
+  name: "currentGroupChatSlice",
+  reducers: {
+    insertCurrentGroupChatData: (state, action): any => {
+      return { ...action.payload };
+    },
+  },
+});
+
 const callStateSlice = createSlice({
   initialState: {
     do: {
@@ -103,6 +113,7 @@ const Store = configureStore(<any>{
     changeContentBar: changeContentBar.reducer,
     UserAccountData: UserAccountDataSlice.reducer,
     loadUserAccountData: loadUserAccountDataSlice.reducer,
+    currentGroupChat: currentGroupChatSlice.reducer,
     currentChat: currentChatSlice.reducer,
     callStates: callStateSlice.reducer,
   },
@@ -115,4 +126,5 @@ export const { changeContent } = changeContentBar.actions;
 export const { insertData } = UserAccountDataSlice.actions;
 export const { load } = loadUserAccountDataSlice.actions;
 export const { insertCurrentChatData } = currentChatSlice.actions;
+export const { insertCurrentGroupChatData } = currentGroupChatSlice.actions;
 export const { setCallState } = callStateSlice.actions;

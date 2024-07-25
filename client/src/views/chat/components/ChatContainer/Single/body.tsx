@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { TCallStates, TMessages, TUser } from "../../../../../app/Types";
+import { toastError } from "../../../../../app/Toast";
+import { setCallState } from "../../../../../app/Redux";
+
 import api from "../../../../../utils/api";
 import socket from "../../../../../app/Socket";
-import Navigation from "./NavigationBar";
-import Chats from "./Chats";
-import InputMessage from "./InputMessage";
-import VideoCall from "./VideoCall";
-import { toastError, toastSuccess } from "../../../../../app/Toast";
-import { setCallState } from "../../../../../app/Redux";
+import Chats from "./components/Chats";
+import InputMessage from "./components/InputMessage";
+import Navigation from "./components/NavigationBar";
+import VideoCall from "./components/VideoCall";
 
 type TReplyMessage = {
   visible: Boolean;

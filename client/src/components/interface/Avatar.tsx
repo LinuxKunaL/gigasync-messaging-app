@@ -42,7 +42,7 @@ function Avatar({ data, rounded, className, size }: Props) {
             rounded ? "rounded-full" : "rounded-lg"
           }`}
           alt=""
-          src={`http://localhost:1000/api/default/avatar?id=${data?._id}`}
+          src={`${process.env.REACT_APP_BACKEND_HOST}/api/default/avatar?id=${data?._id}&type=user`}
         />
       ) : (
         <div

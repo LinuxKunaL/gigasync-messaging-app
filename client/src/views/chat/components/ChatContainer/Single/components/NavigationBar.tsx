@@ -1,5 +1,5 @@
-import Avatar from "../../../../../components/interface/Avatar";
-import convertTime from "../../../../../utils/ConvertTime";
+import Avatar from "../../../../../../components/interface/Avatar";
+import convertTime from "../../../../../../utils/ConvertTime";
 import {
   MdClose,
   MdMoreVert,
@@ -10,13 +10,14 @@ import {
 import { useDispatch } from "react-redux";
 import {
   insertCurrentChatData,
+  insertCurrentGroupChatData,
   setCallState,
   setChatDetails,
-} from "../../../../../app/Redux";
-import { TUser } from "../../../../../app/Types";
+} from "../../../../../../app/Redux";
+import { TUser } from "../../../../../../app/Types";
 
-import ToolTip from "../../../../../components/interface/Tooltip";
-import Icon from "../../../../../components/interface/Icon";
+import ToolTip from "../../../../../../components/interface/Tooltip";
+import Icon from "../../../../../../components/interface/Icon";
 
 type Props = {
   props: {
@@ -100,7 +101,10 @@ function NavigationBar({ props }: Props) {
           <MdMoreVert />
         </Icon>
         <Icon
-          onClick={() => dispatch(insertCurrentChatData(null))}
+          onClick={() => {
+            dispatch(insertCurrentChatData(null));
+            dispatch(insertCurrentGroupChatData(null));
+          }}
           variant="transparent"
         >
           <MdClose />

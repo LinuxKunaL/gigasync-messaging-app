@@ -1,168 +1,61 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
-  MdClose,
-  MdSearch,
-  MdDoneAll,
-  MdGroupAdd,
-  MdMessage,
   MdAdd,
   MdPerson,
+  MdClose,
+  MdDoneAll,
+  MdGroupAdd,
+  MdOutlineSaveAs,
 } from "react-icons/md";
-import { TGroups, TUser } from "../../../../../app/Types";
-import { useDispatch, useSelector } from "react-redux";
-import { insertCurrentChatData } from "../../../../../app/Redux";
+import { TGroup, TUser } from "../../../../../app/Types";
+import { useDispatch } from "react-redux";
+import {
+  insertCurrentChatData,
+  insertCurrentGroupChatData,
+} from "../../../../../app/Redux";
+import { toastSuccess, toastWarning } from "../../../../../app/Toast";
+import { handleCatchError } from "../../../../../utils/ErrorHandle";
 
 import Input from "../../../../../components/interface/Input";
 import Icon from "../../../../../components/interface/Icon";
-import TabNavigation from "../../../../../components/interface/TabNavigation";
-import Contacts from "../components/Contacts";
 import ToolTip from "../../../../../components/interface/Tooltip";
 import api from "../../../../../utils/api";
 import Avatar from "../../../../../components/interface/Avatar";
 import Button from "../../../../../components/interface/Button";
 import ModalWindow from "../../../../../components/interface/ModalWindow";
-import { toastSuccess, toastWarning } from "../../../../../app/Toast";
-import { handleCatchError } from "../../../../../utils/ErrorHandle";
-import { group } from "console";
+import dataURLtoBlob from "../../../../../utils/dataURLtoBlob";
 
-type Props = {};
-
-function Home({}: Props) {
-  const [isSearchVisible, setIsSearchVisible] = useState<Boolean>(false);
-  const [activeTab, setActiveTab] = useState("All Chats");
-
-  return (
-    <>
-      <div className="self-start flex items-center justify-between w-full relative">
-        <div>
-          <h1 className="text-2xl font-semibold dark:text-bunker-300">Chat</h1>
-          <p className="text-sm dark:text-bunker-500">Start New Conversation</p>
-        </div>
-        <Icon onClick={() => setIsSearchVisible(true)} variant="transparent">
-          <MdSearch />
-        </Icon>
-        {isSearchVisible ? (
-          <div id="search" className="absolute w-full h-full">
-            <Input
-              type="search"
-              placeholder="Search chat"
-              className=" absolute bottom-0 top-0"
-            />
-            <Icon
-              onClick={() => setIsSearchVisible(false)}
-              className="absolute right-2 bottom-2"
-              variant="transparent"
-            >
-              <MdClose />
-            </Icon>
-          </div>
-        ) : null}
-      </div>
-      <div className="dark:bg-bunker-950 bg-bunker-50 p-2 rounded-lg flex space-x-4 w-max">
-        <TabNavigation
-          tabTitle={["All Chats", "Groups", "Contacts"]}
-          onTabActive={setActiveTab}
-          activeTab={activeTab}
-        />
-      </div>
-      <div className="flex flex-col gap-4 h-full">
-        {activeTab === "All Chats" ? <Chats /> : null}
-        {activeTab === "Groups" ? <Groups /> : null}
-        {activeTab === "Contacts" ? <Contacts /> : null}
-      </div>
-    </>
-  );
-}
-
-function Chats() {
-  const [allChat, setAllChat] = useState<any>([]);
-  const [reloadAllChats, setReloadAllChats] = useState(0);
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    api
-      .get("api/user/allChats")
-      .then((Res) => {
-        setAllChat(Res.data);
-      })
-      .catch(() => {});
-  }, [reloadAllChats]);
-
-  const handleChat = (param: TUser): void => {
-    const { _id, username, fullName, avatarColor, isAvatar } = param;
-
-    dispatch(
-      insertCurrentChatData({ username, _id, fullName, avatarColor, isAvatar })
-    );
-  };
-
-  return (
-    <div className="h-full justify-center flex items-center !transition-none">
-      {allChat.length > 0 ? (
-        <div className="flex flex-col gap-3 w-full h-full ">
-          {allChat?.map((chat?: any) => (
-            <div
-              onClick={() => handleChat(chat?.user)}
-              className="flex flex-row w-full h-max justify-between py-4 px-4 hover:dark:bg-bunker-900/60 hover:bg-bunker-100/70 rounded-lg cursor-pointer"
-            >
-              <div className="flex gap-2 items-center">
-                <Avatar rounded={true} data={chat?.user} />
-                <div className="flex flex-col gap-1">
-                  <h1 className="text-lg font-normal dark:text-bunker-50 text-bunker-600">
-                    {chat?.user?.fullName}
-                  </h1>
-                  <p className="text-bunker-400 text-sm truncate">
-                    {chat?.message?.text}
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-col justify-between items-end gap-1">
-                <p className="text-sm text-bunker-400">11:30 AM</p>
-                <MdDoneAll className="size-6 text-cyan-400" />
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div>
-          <div className="m-auto flex flex-col gap-3 items-center text-center">
-            <MdMessage className="text-2xl text-cyan-400 " />
-            <p className="text-bunker-400 text-sm">
-              You have no messages. Start a conversation
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 type TUserList = {
   users: TUser[];
   visible: Boolean;
 };
+
 function Groups() {
   const [isLayoutVisible, setIsLayoutVisible] = useState<Boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [groupDetails, setGroupDetails] = useState({
     name: "",
     description: "",
+    avatar: null,
   });
   const [isUsersList, setIsUsersList] = useState<TUserList>({
     users: [],
     visible: false,
   });
   const [groupMembers, setGroupMembers] = useState<TUser[]>([]);
-  const [listGroups, setListGroups] = useState<TGroups[]>([]);
+  const [listGroups, setListGroups] = useState<TGroup[]>([]);
+  const dispatch = useDispatch();
+  const RAvatarPreview = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     api
-      .post("api/user/group", { operation: "getAll" })
+      .post("api/user/group/list")
       .then((res) => {
         setListGroups(res.data);
       })
       .catch((err) => handleCatchError(err));
-  }, []);
+  }, [toastSuccess]);
 
   const handleSearchContact = () => {
     api
@@ -187,21 +80,51 @@ function Groups() {
       return toastWarning("Please add group description");
 
     api
-      .post("api/user/group", {
-        operation: "create",
-        groupDetails,
-        groupMembers,
-      })
+      .post(
+        "api/user/group/create",
+        {
+          groupDetails,
+          groupMembers,
+        },
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      )
       .then(() => {
         toastSuccess("Group created");
         setIsLayoutVisible(false);
         setGroupDetails({
           name: "",
           description: "",
+          avatar: null,
         });
         setGroupMembers([]);
       })
       .catch((err) => handleCatchError(err));
+  };
+
+  const handleUploadAvatar = (
+    param: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    const file = param.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onloadend = async () => {
+        const blobImage = dataURLtoBlob(reader.result as string);
+        setGroupDetails((pre: any) => ({ ...pre, avatar: blobImage }));
+        if (RAvatarPreview?.current) {
+          RAvatarPreview.current!.src = reader.result as string;
+        }
+      };
+    }
+  };
+
+  const handleGroupChat = (param: TGroup): void => {
+    dispatch(insertCurrentChatData({}));
+    dispatch(insertCurrentGroupChatData(param));
   };
 
   return (
@@ -218,9 +141,17 @@ function Groups() {
         </ToolTip>
       </div>
       {listGroups?.map((group) => (
-        <div className="flex flex-row justify-between py-4 px-4 hover:dark:bg-bunker-900/60 hover:bg-bunker-100/70 rounded-lg cursor-pointer">
+        <div
+          key={group._id}
+          className="flex flex-row justify-between py-4 px-4 hover:dark:bg-bunker-900/60 hover:bg-bunker-100/70 rounded-lg cursor-pointer"
+          onClick={() => handleGroupChat(group)}
+        >
           <div className="flex gap-2 items-center">
-            <Avatar rounded={true} data={group} />
+            <img
+              className="size-12 rounded-full"
+              src={`${process.env.REACT_APP_BACKEND_HOST}/api/default/avatar?id=${group?._id}&type=group`}
+              alt="group avatar"
+            />
             <div>
               <h1 className="text-lg font-normal dark:text-bunker-50 text-bunker-600">
                 {group.groupDetails?.name}
@@ -256,7 +187,27 @@ function Groups() {
                 </Icon>
               </div>
               <div className="flex flex-row items-center w-full gap-2">
-                <div className="size-16 bg-bunker-900 rounded-full" />
+                <label
+                  htmlFor="avatar-upload"
+                  className="relative cursor-pointer"
+                >
+                  <img
+                    className="size-16 bg-bunker-900 rounded-full"
+                    src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAgAB/ejLXNwAAAAASUVORK5CYII="
+                    ref={RAvatarPreview}
+                    alt="Transparent Image"
+                  />
+                  {!groupDetails.avatar && (
+                    <MdOutlineSaveAs className="absolute m-auto text-bunker-300 text-lg top-0 bottom-0 right-0 left-0" />
+                  )}
+                </label>
+                <input
+                  onChange={handleUploadAvatar}
+                  type="file"
+                  hidden
+                  accept="image/*"
+                  id="avatar-upload"
+                />
                 <Input
                   onChange={(e) =>
                     setGroupDetails({ ...groupDetails, name: e.target.value })
@@ -399,4 +350,4 @@ function Groups() {
   );
 }
 
-export default Home;
+export default Groups;

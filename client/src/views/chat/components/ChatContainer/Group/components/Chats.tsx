@@ -1,12 +1,12 @@
 import { memo, useEffect, useRef, useState } from "react";
-import { TMessages, TUser } from "../../../../../app/Types";
+import { TMessages, TUser } from "../../../../../../app/Types";
 import { MdClose, MdDownload, MdOutlineMessage } from "react-icons/md";
 import { useSelector } from "react-redux";
 
-import LoadingAnimation from "../../../../../assets/svgs/LoadingAnimation";
-import Icon from "../../../../../components/interface/Icon";
+import LoadingAnimation from "../../../../../../assets/svgs/LoadingAnimation";
+import Icon from "../../../../../../components/interface/Icon";
 import Message from "./Message";
-import socket from "../../../../../app/Socket";
+import socket from "../../../../../../app/Socket";
 import ReactPlayer from "react-player";
 
 type Props = {

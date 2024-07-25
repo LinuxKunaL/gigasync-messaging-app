@@ -6,13 +6,13 @@ import {
   MdPlayArrow,
   MdReply,
 } from "react-icons/md";
-import { TMessages, TUser } from "../../../../../app/Types";
+import { TMessages, TUser } from "../../../../../../app/Types";
 import { useSelector } from "react-redux";
-import { deleteMessage } from "../../../../../utils/deleteMessage";
-import { toastSuccess, toastWarning } from "../../../../../app/Toast";
+import { deleteMessage } from "../../../../../../utils/deleteMessage";
+import { toastSuccess, toastWarning } from "../../../../../../app/Toast";
 
-import Dropdown from "../../../../../components/interface/Dropdown";
-import convertTime from "../../../../../utils/ConvertTime";
+import Dropdown from "../../../../../../components/interface/Dropdown";
+import convertTime from "../../../../../../utils/ConvertTime";
 
 type Props = {
   props: {
@@ -117,8 +117,8 @@ function Message({ props }: Props) {
                         : "rounded-r-xl rounded-b-xl dark:bg-bunker-900 bg-bunker-100 self-start"
                     } ${
             props.message?.message.text.length < 6
-              ? ""
-              : ""
+              // ? ""
+              // : ""
               ? "max-w-[500px]"
               : "max-w-[500px]"
           }`}

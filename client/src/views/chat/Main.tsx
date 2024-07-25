@@ -3,12 +3,15 @@ import { useDispatch, useSelector } from "react-redux";
 import { handleCatchError } from "../../utils/ErrorHandle";
 import { insertData } from "../../app/Redux";
 
-import SideBar from "./components/Bar.side";
-import ContentBar from "./components/bar.content";
-import ChatSection from "./components/chat.section/index";
-import ChatDetailsBar from "./components/Bar.chatDetails";
+import SideBar from "./components/SidebarMenu";
+import ContentBar from "./components/SidebarContainer";
+import ChatSection from "./components/ChatContainer/Single/body";
+import GroupChatSection from "./components/ChatContainer/Group/body";
+import ChatDetailsBar from "./components/ProfileOverview";
 import api from "../../utils/api";
 import socket from "../../app/Socket";
+import { TUser } from "../../app/Types";
+import PhoneChat from "../../assets/svgs/PhoneChat";
 
 type Props = {};
 
@@ -33,7 +36,7 @@ function Main({}: Props) {
     <div className="h-full flex flex-row">
       <SideBar />
       <ContentBar />
-      <ChatSection />
+      <ChatsSections />
       <ChatDetails />
     </div>
   );
@@ -44,4 +47,30 @@ export default Main;
 function ChatDetails() {
   const SChatDetails = useSelector((state: any) => state.chatDetails);
   return SChatDetails.visible ? <ChatDetailsBar /> : null;
+}
+
+function ChatsSections() {
+  const SCurrentChat: TUser = useSelector((state: any) => state.currentChat);
+
+  const SCurrentGroupChat: TUser = useSelector(
+    (state: any) => state.currentGroupChat
+  );
+
+  if (SCurrentChat?._id) return <ChatSection />;
+  if (SCurrentGroupChat?._id) return <GroupChatSection />;
+
+  return (
+    <div className="dark:bg-bunker-950 h-full w-full flex flex-col justify-center items-center relative">
+      <div className="flex gap-2 flex-col justify-center items-center">
+        <PhoneChat />
+        <h1 className="text-2xl font-semibold dark:text-bunker-300">
+          GigaSync
+        </h1>
+        <p className="text-bunker-400 text-sm text-center">
+          Send and receive files and messages with GigaSync app , <br /> on your
+          website. fast and secure.
+        </p>
+      </div>
+    </div>
+  );
 }

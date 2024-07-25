@@ -31,12 +31,15 @@ const linksPreview = async (req, res) => {
 };
 
 const getAvatar = async (req, res) => {
-  const { id } = req.query;
+  const { id, type } = req.query;
 
   if (!id) return res.status(400).send("Invalid input, expected an id");
 
   try {
-    const AvatarImage = path.join(__dirname, `../data/user-${id}/Avatar.jpg`);
+    const AvatarImage = path.join(
+      __dirname,
+      `../data/${type}-${id}/Avatar.jpg`
+    );
 
     if (!fs.existsSync(AvatarImage)) {
       return res.status(404).send("Not Found");

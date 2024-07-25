@@ -17,7 +17,7 @@ export type TUser = {
   };
 };
 
-export type TGroups = {
+export type TGroup = {
   _id?: string;
   groupDetails?: {
     name?: string;
@@ -26,6 +26,7 @@ export type TGroups = {
   createdBy?: TUser;
   groupAdmin?: TUser;
   groupMembers?: TUser[];
+  groupMembersLength?: number;
   groupSetting?: {
     privacy: {
       isPhotoAllowed?: boolean;

@@ -1,5 +1,5 @@
-import ToolTip from "../../../../../components/interface/Tooltip";
-import Icon from "../../../../../components/interface/Icon";
+import ToolTip from "../../../../components/interface/Tooltip";
+import Icon from "../../../../components/interface/Icon";
 import {
   MdAdd,
   MdAddCall,
@@ -12,16 +12,16 @@ import {
   MdVideoCall,
 } from "react-icons/md";
 import { useEffect, useState } from "react";
-import { toastSuccess } from "../../../../../app/Toast";
-import { handleCatchError } from "../../../../../utils/ErrorHandle";
+import { toastSuccess } from "../../../../app/Toast";
+import { handleCatchError } from "../../../../utils/ErrorHandle";
 import { useDispatch } from "react-redux";
-import { insertCurrentChatData } from "../../../../../app/Redux";
+import { insertCurrentChatData } from "../../../../app/Redux";
 
-import Dropdown from "../../../../../components/interface/Dropdown";
-import Input from "../../../../../components/interface/Input";
-import Button from "../../../../../components/interface/Button";
-import api from "../../../../../utils/api";
-import Avatar from "../../../../../components/interface/Avatar";
+import Dropdown from "../../../../components/interface/Dropdown";
+import Input from "../../../../components/interface/Input";
+import Button from "../../../../components/interface/Button";
+import api from "../../../../utils/api";
+import Avatar from "../../../../components/interface/Avatar";
 
 type Props = {};
 

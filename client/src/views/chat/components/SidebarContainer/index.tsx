@@ -6,16 +6,16 @@ import { SwiperSlide, Swiper } from "swiper/react";
 import { useSelector } from "react-redux";
 
 import Icon from "../../../../components/interface/Icon";
-import Home from "./components/Home";
-import Favorite from "./components/Favorite";
-import Files from "./components/Files";
-import Contacts from "./components/Contacts";
-import Profile from "./components/Profile";
 
 import "swiper/css";
 import "swiper/css/grid";
 import "swiper/css/pagination";
-import api from "../../../../utils/api";
+
+import Home from "./Home/index";
+import Favorite from "./Favorite";
+import Files from "./Files";
+import Contacts from "./Contacts";
+import Profile from "./Profile";
 
 type Props = {};
 
@@ -43,7 +43,7 @@ function ContentBar({}: Props) {
 
 function Status() {
   const [isStatusPreview, setIsStatusPreview] = useState(false);
-  
+
   const statusData = [
     {
       user: "Kunal",

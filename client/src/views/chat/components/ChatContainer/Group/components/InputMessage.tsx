@@ -1,6 +1,6 @@
 import EmojiPicker from "emoji-picker-react";
 import { useRef, useState } from "react";
-import Icon from "../../../../../components/interface/Icon";
+import Icon from "../../../../../../components/interface/Icon";
 import {
   MdMic,
   MdSend,
@@ -12,10 +12,10 @@ import {
   MdOutlineVideoFile,
   MdOutlineDocumentScanner,
 } from "react-icons/md";
-import Dropdown from "../../../../../components/interface/Dropdown";
+import Dropdown from "../../../../../../components/interface/Dropdown";
 import { useSelector } from "react-redux";
-import { TUser } from "../../../../../app/Types";
-import socket from "../../../../../app/Socket";
+import { TUser } from "../../../../../../app/Types";
+import socket from "../../../../../../app/Socket";
 
 type Props = {
   props: {

@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { MdCopyAll, MdEdit, MdSave } from "react-icons/md";
-import { handleCatchError } from "../../../../../utils/ErrorHandle";
-import { toastSuccess } from "../../../../../app/Toast";
+import { handleCatchError } from "../../../../utils/ErrorHandle";
+import { toastSuccess } from "../../../../app/Toast";
 import { useSelector } from "react-redux";
 
-import Icon from "../../../../../components/interface/Icon";
-import Switch from "../../../../../components/interface/Switch";
-import ToolTip from "../../../../../components/interface/Tooltip";
-import api from "../../../../../utils/api";
+import Icon from "../../../../components/interface/Icon";
+import Switch from "../../../../components/interface/Switch";
+import ToolTip from "../../../../components/interface/Tooltip";
+import api from "../../../../utils/api";
+import dataURLtoBlob from "../../../../utils/dataURLtoBlob";
 
 type Props = {};
 type ProfileData = {
@@ -77,20 +78,6 @@ function Profile({}: Props) {
         });
       };
     }
-  };
-
-  const dataURLtoBlob = (dataURL: any) => {
-    const splitDataUrl = dataURL.split(",");
-    const byteString = atob(splitDataUrl[1]);
-    const mimeString = splitDataUrl[0].split(":")[1].split(";")[0];
-
-    const arrayBuffer = new ArrayBuffer(byteString.length);
-    const uint8Array = new Uint8Array(arrayBuffer);
-
-    for (let i = 0; i < byteString.length; i++) {
-      uint8Array[i] = byteString.charCodeAt(i);
-    }
-    return new Blob([arrayBuffer], { type: mimeString });
   };
 
   return (
