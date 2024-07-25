@@ -40,3 +40,4 @@ coverage/
 
 # inner file
 /server/src/data/user-*
+/server/src/data/group-*
