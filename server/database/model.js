@@ -79,6 +79,7 @@ const groupsSchema = new Schema({
   groupAdmin: { type: Schema.Types.ObjectId, ref: "User" },
   groupMembers: [{ type: Schema.Types.ObjectId, ref: "User" }],
   groupSetting: {
+    private: { type: Boolean, default: true },
     privacy: {
       isPhotoAllowed: { type: Boolean, default: true },
       isVideoAllowed: { type: Boolean, default: true },
@@ -87,7 +88,7 @@ const groupsSchema = new Schema({
   },
   avatar: { type: String },
   createdAt: { type: Date, default: Date.now },
-  groupChats: [
+  messages: [
     {
       timestamp: { type: Date, default: Date.now },
       message: {

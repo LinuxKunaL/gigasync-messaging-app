@@ -40,7 +40,7 @@ function AllChats() {
               className="flex flex-row w-full h-max justify-between py-4 px-4 hover:dark:bg-bunker-900/60 hover:bg-bunker-100/70 rounded-lg cursor-pointer"
             >
               <div className="flex gap-2 items-center">
-                <Avatar rounded={true} data={chat?.user} />
+                <Avatar rounded={true} data={chat?.user} size="xxl" />
                 <div className="flex flex-col gap-1">
                   <h1 className="text-lg font-normal dark:text-bunker-50 text-bunker-600">
                     {chat?.user?.fullName}

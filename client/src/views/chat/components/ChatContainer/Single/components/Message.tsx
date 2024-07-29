@@ -64,16 +64,7 @@ function Message({ props }: Props) {
                       toastSuccess("Message deleted");
                     },
                   }
-                : {
-                    element: (
-                      <div className="flex gap-1 items-center">
-                        <MdDelete /> delete
-                      </div>
-                    ),
-                    onClick() {
-                      toastWarning("Feature not available yet");
-                    },
-                  },
+                : {},
               {
                 element: (
                   <div className="flex gap-1 items-center">
@@ -126,13 +117,13 @@ function Message({ props }: Props) {
           {props.message?.message.file.type === "image" ? (
             <div className="relative">
               <img
-                src={`${process.env.REACT_APP_BACKEND_HOST}/api/default/messageImage?messageId=${props.message?._id}&filename=${props.message?.message.file.name}&me=${props.message?.sender._id}`}
+                src={`${process.env.REACT_APP_BACKEND_HOST}/api/default/messageImage?filename=${props.message?.message.file.name}&_id=${props.message?.sender._id}&type=user`}
                 className="w-[400px] h-[400px] object-cover rounded-md"
               />
               <div
                 onClick={() =>
                   props?.downloadFile(
-                    `${process.env.REACT_APP_BACKEND_HOST}/api/default/messageImage?messageId=${props.message?._id}&filename=${props.message?.message.file.name}&me=${props.message?.sender._id}`,
+                    `${process.env.REACT_APP_BACKEND_HOST}/api/default/messageImage?filename=${props.message?.message.file.name}&_id=${props}&type=user`,
                     props.message?.message.file.name as string
                   )
                 }

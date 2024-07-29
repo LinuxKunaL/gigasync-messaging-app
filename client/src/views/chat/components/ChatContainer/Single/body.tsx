@@ -10,6 +10,7 @@ import Chats from "./components/Chats";
 import InputMessage from "./components/InputMessage";
 import Navigation from "./components/NavigationBar";
 import VideoCall from "./components/VideoCall";
+import ChatDetailsBar from "../../ChatDetailsSidebar";
 
 type TReplyMessage = {
   visible: Boolean;
@@ -108,6 +109,7 @@ function Body() {
       {/* <div className="absolute p-2 bg-red-400 bottom-0 text-white  text-2xl z-40">
         {SUserProfile._id}
       </div> */}
+      {/* <ChatDetailsBar  /> */}
     </div>
   );
 }

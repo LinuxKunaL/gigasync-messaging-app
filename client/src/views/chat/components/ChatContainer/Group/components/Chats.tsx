@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef, useState } from "react";
-import { TMessages, TUser } from "../../../../../../app/Types";
+import { TGroup, TMessages, TUser } from "../../../../../../app/Types";
 import { MdClose, MdDownload, MdOutlineMessage } from "react-icons/md";
 import { useSelector } from "react-redux";
 
@@ -11,7 +11,7 @@ import ReactPlayer from "react-player";
 
 type Props = {
   props: {
-    selectedContact: TUser | undefined;
+    selectedGroup: TGroup | undefined;
     messageLoading: Boolean;
     setReplyMessage: (param: any) => void;
   };
@@ -23,48 +23,36 @@ function Chats({ props }: Props) {
     visible: false,
   });
   const [chatMessages, setChatMessages] = useState<TMessages[]>([]);
-  const SActiveChat: TUser = useSelector((state: any) => state.currentChat);
   const SUserProfile: TUser = useSelector(
     (state: any) => state.UserAccountData
   );
   const RChatBody = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    socket.on("initialMessage", (OldMessage) => {
+    socket.on("initialMessage-group", (OldMessage) => {
       setChatMessages(OldMessage);
     });
 
-    socket.on("receiveMessage", (receivedMessage) => {
-      const msg = receivedMessage;
-
-      if (
-        (msg.sender._id === SUserProfile?._id &&
-          msg.receiver._id === SActiveChat?._id) ||
-        (msg.sender._id === SActiveChat?._id &&
-          msg.receiver._id === SUserProfile?._id)
-      ) {
-        setChatMessages((prev) => [...prev, msg]);
+    socket.on("receiveMessage-group", (receivedMessage) => {
+      if (receivedMessage.groupId === props.selectedGroup?._id) {
+        const { message } = receivedMessage;
+        setChatMessages((prev) => [...prev, message]);
         setTimeout(() => {
           RChatBody?.current?.classList.add("scroll-smooth");
           RChatBody?.current?.scrollTo(0, RChatBody.current.scrollHeight);
         }, 100);
-        // setMessageLoading(false);
       }
     });
 
     return () => {
-      socket.off("initialMessage");
-      socket.off("receiveMessage");
+      socket.off("initialMessage-group");
+      socket.off("receiveMessage-group");
     };
-  }, []);
+  }, [props]);
 
   useEffect(() => {
-    if (props?.selectedContact) {
-      socket.emit("selectContact", {
-        me: SUserProfile?._id,
-        to: SActiveChat?._id,
-        socketId: socket.id,
-      });
+    if (props?.selectedGroup) {
+      socket.emit("selectGroup", { groupId: props.selectedGroup?._id });
       setTimeout(() => {
         RChatBody.current?.scrollTo(0, RChatBody.current.scrollHeight);
       }, 100);
@@ -72,7 +60,7 @@ function Chats({ props }: Props) {
     return () => {
       socket.off("selectContact");
     };
-  }, [SUserProfile, props?.selectedContact]);
+  }, [SUserProfile, props?.selectedGroup]);
 
   const downloadFile = async (link: string, filename: string) => {
     const data = await fetch(link);
@@ -84,19 +72,20 @@ function Chats({ props }: Props) {
   };
 
   return (
-    <div className="flex flex-col w-full h-full relative mb-24 overflow-hidden">
+    <div className="flex flex-col w-full h-full relative mb-24 pt-4 overflow-hidden">
       {chatMessages?.length > 0 ? (
         <div
           ref={RChatBody}
-          className="w-full h-full flex flex-col gap-5 overflow-y-auto no-scrollbar px-6"
+          className="w-full h-full flex flex-col gap-10 overflow-y-auto no-scrollbar px-6"
         >
           {chatMessages?.map((message: TMessages) => (
             <Message
               props={{
                 message,
-                setReplyMessage: props?.setReplyMessage,
                 downloadFile,
                 setPlayVideo,
+                groupId: props.selectedGroup?._id,
+                setReplyMessage: props?.setReplyMessage,
               }}
             />
           ))}
@@ -121,8 +110,9 @@ function Chats({ props }: Props) {
           <p className="text-bunker-400 text-sm">No messages yet</p>
           <p className="text-bunker-400 text-sm">Start a conversation</p>
           <p className="text-cyan-400 text-sm">
-            with {props?.selectedContact?.fullName}
+            with {props?.selectedGroup?.groupDetails?.name}
           </p>
+          <p></p>
         </div>
       )}
       {playVideo.visible ? (

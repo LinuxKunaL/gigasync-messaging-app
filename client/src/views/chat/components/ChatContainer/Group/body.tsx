@@ -36,7 +36,6 @@ function Body() {
         _id: SActiveGroupChat?._id,
       })
       .then((res) => {
-        console.log(res.data);
         setSelectedGroup(res.data);
       });
   }, [loadUserData, SActiveGroupChat]);
@@ -57,16 +56,17 @@ function Body() {
     <div className="dark:bg-bunker-950 h-full w-full flex flex-col relative">
       <div className="h-full w-full flex flex-col overflow-y-auto no-scrollbar z-10">
         <Navigation props={{ selectedGroup }} />
-        {/* <Chats
+        <Chats
           props={{
             selectedGroup,
             messageLoading,
             setReplyMessage,
           }}
-        /> */}
+        />
       </div>
       <InputMessage
         props={{
+          selectedGroup,
           setReplyMessage,
           replyMessage,
         }}

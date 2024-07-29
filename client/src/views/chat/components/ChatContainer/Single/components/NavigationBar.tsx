@@ -31,7 +31,7 @@ function NavigationBar({ props }: Props) {
   return (
     <div className="flex sticky z-20 top-0 flex-row justify-between items-center p-4 dark:bg-bunker-910/50 bg-bunker-100/50 backdrop-blur-md">
       <div className="flex gap-2 items-center">
-        <Avatar rounded={true} data={props?.selectedContact} />
+        <Avatar rounded={true} data={props?.selectedContact} size="xxl" />
         <div>
           <h1 className="text-lg font-normal dark:text-bunker-50 text-bunker-600">
             {props?.selectedContact?.fullName}
@@ -93,6 +93,7 @@ function NavigationBar({ props }: Props) {
               setChatDetails({
                 visible: true,
                 id: props?.selectedContact?._id,
+                type: "single",
               })
             );
           }}

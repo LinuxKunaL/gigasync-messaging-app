@@ -7,7 +7,7 @@ import SideBar from "./components/SidebarMenu";
 import ContentBar from "./components/SidebarContainer";
 import ChatSection from "./components/ChatContainer/Single/body";
 import GroupChatSection from "./components/ChatContainer/Group/body";
-import ChatDetailsBar from "./components/ProfileOverview";
+import ChatDetailsBar from "./components/ChatDetailsSidebar";
 import api from "../../utils/api";
 import socket from "../../app/Socket";
 import { TUser } from "../../app/Types";
@@ -45,8 +45,10 @@ function Main({}: Props) {
 export default Main;
 
 function ChatDetails() {
-  const SChatDetails = useSelector((state: any) => state.chatDetails);
-  return SChatDetails.visible ? <ChatDetailsBar /> : null;
+  const SChatDetails: { visible: boolean; id: string; type: string } =
+    useSelector((state: any) => state.chatDetails);
+
+  return SChatDetails.visible ? <ChatDetailsBar props={{ ...SChatDetails }} /> : null;
 }
 
 function ChatsSections() {

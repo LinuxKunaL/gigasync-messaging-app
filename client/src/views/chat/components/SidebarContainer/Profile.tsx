@@ -331,7 +331,7 @@ const ProfileAvatar = ({
         <img
           className="w-full h-full absolute rounded-full"
           alt=""
-          src={`http://localhost:1000/api/default/avatar?id=${data._id}`}
+          src={`${process.env.REACT_APP_BACKEND_HOST}/api/default/avatar?id=${data._id}&type=user`}
         />
       ) : (
         <div

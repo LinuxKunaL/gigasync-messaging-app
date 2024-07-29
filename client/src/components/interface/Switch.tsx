@@ -5,7 +5,7 @@ type Props = {
   size: "normal" | "small" | "tiny";
   id?: string;
   isCheck?: boolean;
-  onChange?: any;
+  onChange?: (event: any) => void;
   disabled?: boolean;
   name?: string | any;
 };

@@ -3,7 +3,7 @@ type Props = {
   border?: boolean;
   rounded?: boolean;
   className?: string;
-  size?: string;
+  size: "xs" | "sm" | "md" | "lg" | "xl" | "xxl" | "full";
 };
 
 function Avatar({ data, rounded, className, size }: Props) {
@@ -28,9 +28,19 @@ function Avatar({ data, rounded, className, size }: Props) {
     neutral: "to-neutral-600 from-neutral-400 border-neutral-400",
   };
 
+  const sizeVariant: any = {
+    xs: "w-4 h-4 text-xs",
+    sm: "w-6 h-6 text-sm",
+    md: "w-8 h-8 text-sm",
+    lg: "w-10 h-10 text-sm",
+    xl: "w-12 h-12 text-md",
+    xxl: "w-14 h-14 text-md",
+    full: "w-full h-full text-lg",
+  };
+
   return (
     <div
-      className={`size-14 border- ${className} ${size} ${
+      className={`${sizeVariant[size]} border- ${className} ${size} ${
         colorVariant[data?.avatarColor]
       } select-none ${
         rounded ? "rounded-full" : "rounded-lg"

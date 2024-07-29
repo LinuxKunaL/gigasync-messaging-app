@@ -4,6 +4,7 @@ import fs from "fs";
 import multer from "multer";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
+import config from "../../config/config.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -154,7 +155,7 @@ const getChatWithinData = async (req, res) => {
       videos: [],
     };
 
-    chat.messages.map((msg) => {
+    chat?.messages.map((msg) => {
       if (msg.message.file.type === "image") {
         media.images.push(
           `http://localhost:1000/api/default/messageImage?messageId=${msg._id}&filename=${msg.message.file.name}&me=${msg.sender}`
@@ -178,6 +179,7 @@ const getChatWithinData = async (req, res) => {
 
     return res.status(200).send({ media, userTo });
   } catch (error) {
+    console.log(error);
     return res.status(500).send("Internal Server Error");
   }
 };
@@ -226,10 +228,68 @@ const groupCreate = async (req, res) => {
       }
     }
   });
+};
 
-  // if (operation === "getGroup") {
-  //
-  // }
+const groupUpdate = async (req, res) => {
+  const { userId } = req;
+  const { groupId, update } = req.body;
+
+  const isEditable = await groups.findOne({ _id: groupId, createdBy: userId });
+  if (!isEditable?._id) return res.status(403).send("you can't edit");
+
+  if (update.operation === "addMember") {
+    const group = await groups.findById({ _id: groupId });
+    group.groupMembers.push(update.data);
+    group.save();
+    return res.status(200).send({ message: "Member added" });
+  }
+
+  if (update.operation === "deleteMember") {
+    const group = await groups.findById({ _id: groupId });
+    group.groupMembers = group.groupMembers.filter(
+      (member) => member.toString() !== update.data
+    );
+    group.save();
+    return res.status(200).send({ message: "Member deleted" });
+  }
+};
+
+const groupSettingUpdate = async (req, res) => {
+  const upload = multer().any();
+
+  upload(req, res, async (err) => {
+    try {
+      const { groupData, groupId } = req.body;
+      const { files } = req;
+
+      await groups.findOneAndUpdate(
+        {
+          _id: groupId,
+        },
+        {
+          groupDetails: groupData.groupDetails,
+          groupSetting: groupData.groupSetting,
+        }
+      );
+
+      if (files[0]) {
+        const filepathWithNewName = path.join(
+          __dirname,
+          `../data/group-${groupId}`,
+          "Avatar.jpg"
+        );
+
+        fs.writeFile(filepathWithNewName, files[0].buffer, (err) => {
+          if (err) console.log(err);
+        });
+      }
+
+      return res.status(200).send(null);
+    } catch (error) {
+      console.log(error);
+      return res.status(406).send("Error in server");
+    }
+  });
 };
 
 const groupList = async (req, res) => {
@@ -267,6 +327,7 @@ const groupList = async (req, res) => {
 
 const groupGetById = async (req, res) => {
   const { _id } = req.body;
+
   try {
     const group = await groups.findOne({ _id }).populate({
       path: "createdBy",
@@ -286,14 +347,61 @@ const groupGetById = async (req, res) => {
   }
 };
 
+const getGroupChatData = async (req, res) => {
+  const { groupId } = req.body;
+
+  try {
+    const group = await groups.findById(groupId).populate({
+      path: "createdBy groupMembers",
+      select: "fullName username avatarColor isAvatar",
+    });
+
+    var media = {
+      images: [],
+      videos: [],
+    };
+
+    group?.messages.map((msg) => {
+      if (msg.message.file.type === "image") {
+        media.images.push(
+          `${config.server.host}/api/default/messageImage?filename=${msg.message.file.name}&_id=${groupId}&type=group`
+        );
+      }
+      if (msg.message.file.type === "video") {
+        media.videos.push(
+          `${config.server.host}/api/default/messageVideo/group-${groupId}/videos/${msg.message.file.name}`
+        );
+      }
+    });
+
+    const modifiedData = {
+      _id: group?._id,
+      groupDetails: group?.groupDetails,
+      groupMembers: group?.groupMembers,
+      groupSetting: group?.groupSetting,
+      createdBy: group?.createdBy,
+      createdAt: group?.createdAt,
+      media,
+    };
+
+    return res.status(200).send(modifiedData);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send("Internal Server Error");
+  }
+};
+
 export {
   groupList,
-  groupCreate,
   getAllChat,
+  groupCreate,
+  groupUpdate,
   groupGetById,
   profileUpdate,
   searchProfiles,
   getProfileData,
+  getGroupChatData,
   getChatWithinData,
+  groupSettingUpdate,
   handleContactOperations,
 };

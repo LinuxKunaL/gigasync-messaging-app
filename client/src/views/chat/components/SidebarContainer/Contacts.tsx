@@ -102,7 +102,7 @@ function Contacts({}: Props) {
             className="flex flex-row justify-between items-center py-4 px-4 hover:dark:bg-bunker-900/60 hover:bg-bunker-100/70 rounded-lg cursor-pointer"
           >
             <div className="flex gap-2 items-center">
-              <Avatar rounded={true} data={contact} />
+              <Avatar rounded={true} data={contact} size="xxl" />
               <div>
                 <h1 className="text-lg font-normal dark:text-bunker-50 text-bunker-600">
                   {contact.fullName}
@@ -216,7 +216,7 @@ function Contacts({}: Props) {
                     className="flex flex-row  justify-between items-center py-4 px-4 hover:dark:bg-bunker-900/60 hover:bg-bunker-100/70 rounded-lg cursor-pointer"
                   >
                     <div className="flex gap-2 items-center">
-                      <Avatar rounded={true} data={user} />
+                      <Avatar rounded={true} data={user} size="xxl" />
                       <div>
                         <h1 className="text-lg font-normal dark:text-bunker-50 text-bunker-600">
                           {user.fullName}

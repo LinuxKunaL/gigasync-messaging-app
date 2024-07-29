@@ -5,7 +5,7 @@ dotenv.config();
 const config = {
   server: {
     port: process.env.PORT,
-    host: process.env.HOST,
+    host: `${process.env.HOST}:${process.env.PORT}`,
   },
   jwt: {
     key: process.env.JWT_KEY,

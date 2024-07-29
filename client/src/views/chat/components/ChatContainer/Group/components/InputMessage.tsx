@@ -14,11 +14,13 @@ import {
 } from "react-icons/md";
 import Dropdown from "../../../../../../components/interface/Dropdown";
 import { useSelector } from "react-redux";
-import { TUser } from "../../../../../../app/Types";
+import { TGroup, TUser } from "../../../../../../app/Types";
 import socket from "../../../../../../app/Socket";
+import { toastWarning } from "../../../../../../app/Toast";
 
 type Props = {
   props: {
+    selectedGroup: TGroup | undefined;
     replyMessage: any;
     setReplyMessage: (perms: any) => void;
   };
@@ -51,11 +53,10 @@ function InputMessage({ props }: Props) {
       audio: false,
     },
   });
-  
+
   const RSendImagePreview = useRef<HTMLImageElement>(null);
   const RSendVideoPreview = useRef<HTMLVideoElement>(null);
 
-  const SActiveChat: TUser = useSelector((state: any) => state.currentChat);
   const SUserProfile: TUser = useSelector(
     (state: any) => state.UserAccountData
   );
@@ -138,13 +139,22 @@ function InputMessage({ props }: Props) {
   };
 
   const sendMessage = () => {
+    if (!props.selectedGroup?.groupSetting?.privacy.isChatAllowed)
+      return toastWarning("Chat is disable");
+
+    if (!props.selectedGroup?.groupSetting?.privacy.isPhotoAllowed)
+      return toastWarning("Sending image is disable");
+
+    if (!props.selectedGroup?.groupSetting?.privacy.isVideoAllowed)
+      return toastWarning("Sending video is disable");
+
     if (message === "" && UFiles.fileType === undefined) return;
 
     // setMessageLoading(true);
 
     const Message = {
-      me: SUserProfile?._id,
-      to: SActiveChat?._id,
+      groupId: props.selectedGroup?._id,
+      sender: SUserProfile._id,
       message: {
         file: {
           type: UFiles.fileType ? UFiles.fileType : "text",
@@ -158,7 +168,7 @@ function InputMessage({ props }: Props) {
       },
     };
 
-    socket.emit("sendMessage", Message);
+    socket.emit("sendMessage-group", Message);
 
     setUFiles({
       visible: { image: false, video: false, document: false },
@@ -261,6 +271,11 @@ function InputMessage({ props }: Props) {
               element: (
                 <label
                   htmlFor="upload-image"
+                  onClick={() =>
+                    !props.selectedGroup?.groupSetting?.privacy
+                      .isPhotoAllowed &&
+                    toastWarning("Sending image is disable")
+                  }
                   className="flex gap-3 items-center cursor-pointer"
                 >
                   <input
@@ -268,6 +283,9 @@ function InputMessage({ props }: Props) {
                     id="upload-image"
                     accept="image/*"
                     onChange={handleUpload}
+                    disabled={
+                      !props.selectedGroup?.groupSetting?.privacy.isPhotoAllowed
+                    }
                     hidden
                   />
                   <MdOutlineImage className="size-6" />
@@ -291,12 +309,20 @@ function InputMessage({ props }: Props) {
                 <label
                   htmlFor="upload-video"
                   className="flex gap-3 items-center cursor-pointer"
+                  onClick={() =>
+                    !props.selectedGroup?.groupSetting?.privacy
+                      .isVideoAllowed &&
+                    toastWarning("Sending video is disable")
+                  }
                 >
                   <input
                     type="file"
                     id="upload-video"
                     accept="video/*"
                     onChange={handleUpload}
+                    disabled={
+                      !props.selectedGroup?.groupSetting?.privacy.isVideoAllowed
+                    }
                     hidden
                   />
                   <MdOutlineVideoFile className="size-6" />
@@ -326,6 +352,7 @@ function InputMessage({ props }: Props) {
           className="bg-transparent outline-none p-2 text-bunker-400"
           onKeyDownCapture={handleKeyDown}
           value={message}
+          disabled={!props.selectedGroup?.groupSetting?.privacy.isChatAllowed}
           onChange={(e) => setMessage(e.target.value)}
         />
       </div>

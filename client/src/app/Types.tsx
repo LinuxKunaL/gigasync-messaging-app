@@ -24,7 +24,6 @@ export type TGroup = {
     description?: string;
   };
   createdBy?: TUser;
-  groupAdmin?: TUser;
   groupMembers?: TUser[];
   groupMembersLength?: number;
   groupSetting?: {
@@ -33,6 +32,7 @@ export type TGroup = {
       isVideoAllowed?: boolean;
       isChatAllowed?: boolean;
     };
+    private: boolean;
   };
   avatar?: string;
 };

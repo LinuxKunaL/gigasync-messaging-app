@@ -9,6 +9,7 @@ import userRoutes from "./routes/user.routes.js";
 import connection from "../database/connection.js";
 import verifyToken from "./middleware/verifyToken.js";
 import { Server } from "socket.io";
+import socketConnection from "./socket/socketConnection.js";
 
 const app = Express();
 
@@ -22,8 +23,12 @@ const io = new Server(server, {
   },
 });
 
-const chatHandleIO = new ChatHandleIO(io);
-chatHandleIO.run();
+// const chatHandleIO = new ChatHandleIO(io);
+// chatHandleIO.run();
+
+const socket = new socketConnection(io);
+
+socket.connect();
 
 app.use(cors());
 app.use(Express.json());

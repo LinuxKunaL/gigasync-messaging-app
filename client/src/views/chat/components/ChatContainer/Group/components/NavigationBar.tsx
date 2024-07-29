@@ -37,7 +37,9 @@ function NavigationBar({ props }: Props) {
             {props?.selectedGroup?.groupDetails?.name}
           </h1>
           <p className="text-xs flex gap-2 items-center !transition-none text-cyan-600 font-semibold">
-            {props?.selectedGroup?.groupMembersLength} members
+            {props?.selectedGroup?.groupMembersLength &&
+              props?.selectedGroup?.groupMembersLength + 1}{" "}
+            members
           </p>
         </div>
       </div>
@@ -51,6 +53,7 @@ function NavigationBar({ props }: Props) {
               setChatDetails({
                 visible: true,
                 id: props?.selectedGroup?._id,
+                type: "group",
               })
             );
           }}

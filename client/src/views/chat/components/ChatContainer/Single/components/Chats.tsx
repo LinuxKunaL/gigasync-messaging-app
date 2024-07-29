@@ -94,9 +94,9 @@ function Chats({ props }: Props) {
             <Message
               props={{
                 message,
-                setReplyMessage: props?.setReplyMessage,
                 downloadFile,
                 setPlayVideo,
+                setReplyMessage: props?.setReplyMessage,
               }}
             />
           ))}

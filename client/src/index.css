@@ -15,7 +15,22 @@
   .show-content-bar {
     transform: translateX(0px);
   }
+  .animate-enter {
+    animation: fadeIn 0.2s ease-in-out;
+  }
 }
+
+@keyframes fadeIn {
+  from {
+    transform: translateY(1pc);
+    scale: 0;
+  }
+  to {
+    transform: translateY(2pc);
+    scale: 1;
+  }
+}
+
 * {
   /* scroll-behavior: smooth; */
 }

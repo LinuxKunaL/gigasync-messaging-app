@@ -381,7 +381,7 @@ function VideoCall({ props }: { props: TCallStates }) {
             autoPlay
             loop
           />
-          <Avatar data={props.do?.video?.data} size="size-[16pc]" />
+          <Avatar data={props.do?.video?.data} size="full" />
           <div className="flex flex-col justify-between items-center dark:bg-bunker-910 bg-bunker-100 p-4 rounded-md gap-4 w-full">
             <span className="dark:text-bunker-200 text-bunker-600 text-md flex flex-col gap-1 items-center">
               Video calling to
@@ -410,7 +410,7 @@ function VideoCall({ props }: { props: TCallStates }) {
             src="https://assets.mixkit.co/active_storage/sfx/1361/1361-preview.mp3"
           />
           <div className="relative p-4 rounded-md flex flex-col items-center justify-center gap-4">
-            <Avatar size="size-[16pc]" data={props.pick?.video?.data} />
+            <Avatar size="full" data={props.pick?.video?.data} />
             <div className="flex flex-col justify-between items-center dark:bg-bunker-910 bg-bunker-100 p-4 rounded-md gap-4 w-full">
               <span className="dark:text-bunker-200 text-bunker-600 text-md">
                 <b className="text-cyan-500 font-normal">
