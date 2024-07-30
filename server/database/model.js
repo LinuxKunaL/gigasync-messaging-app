@@ -22,6 +22,15 @@ const UserSchema = new Schema({
   socketId: String,
   status: { type: String, default: "offline" },
   lastSeen: { type: Date, default: Date.now },
+  mediaStatus: [
+    {
+      createdAt: { type: Date, default: Date.now },
+      expiredAt: { type: Date },
+      type: { type: String },
+      file: { type: String },
+      caption: { type: String },
+    },
+  ],
 });
 
 const ChatSchema = new Schema({

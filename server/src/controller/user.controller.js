@@ -391,11 +391,22 @@ const getGroupChatData = async (req, res) => {
   }
 };
 
+const mediaStatus = async (req, res) => {
+  const { userId } = req;
+  const upload = multer().any();
+
+  upload(req, res, async (err) => {
+    console.log(req.files);
+    console.log(req.body);
+  });
+};
+
 export {
   groupList,
   getAllChat,
   groupCreate,
   groupUpdate,
+  mediaStatus,
   groupGetById,
   profileUpdate,
   searchProfiles,

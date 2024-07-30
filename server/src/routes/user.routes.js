@@ -12,6 +12,7 @@ import {
   getChatWithinData,
   groupSettingUpdate,
   handleContactOperations,
+  mediaStatus,
 } from "../controller/user.controller.js";
 import { upload } from "../utils/storage.js";
 
@@ -21,6 +22,8 @@ router.post("/group/create", groupCreate);
 router.post("/group/getById", groupGetById);
 router.post("/group/update", groupUpdate);
 router.post("/group/updateSetting", groupSettingUpdate);
+
+router.post("/setMediaStatus", mediaStatus);
 
 router.post("/profile/search", searchProfiles);
 router.post("/profile/getById", getProfileData);
