@@ -395,10 +395,95 @@ const mediaStatus = async (req, res) => {
   const { userId } = req;
   const upload = multer().any();
 
-  upload(req, res, async (err) => {
-    console.log(req.files);
-    console.log(req.body);
+  upload(req, res, async () => {
+    try {
+      const { media, caption } = req.body;
+      const file = req.files;
+
+      const fileName = `${Date.now()}-${media.name}`.replace(
+        /[^a-zA-Z0-9.]+/g,
+        "-"
+      );
+
+      const filepathWithNewName = path.join(
+        __dirname,
+        `../data/user-${userId}`,
+        "status",
+        fileName
+      );
+
+      fs.writeFile(filepathWithNewName, file[0].buffer, (err) => {
+        console.log(err);
+      });
+
+      await User.findByIdAndUpdate(userId, {
+        $push: {
+          mediaStatus: {
+            type: media.type,
+            file: fileName,
+            caption,
+          },
+        },
+      });
+
+      return res.status(200).send("Status uploaded successfully");
+    } catch (error) {
+      return res.status(500).send("Internal Server Error");
+    }
   });
+};
+
+const getMediaStatus = async (req, res) => {
+  const { userId } = req;
+  const { contacts } = req.body;
+
+  try {
+    const contactStatus = await User.find(
+      { _id: { $in: contacts } },
+      {
+        mediaStatus: 1,
+        username: 1,
+        fullName: 1,
+        avatarColor: 1,
+        isAvatar: 1,
+      }
+    );
+
+    const myStatus = await User.findOne(
+      { _id: userId },
+      { mediaStatus: 1, username: 1, fullName: 1, avatarColor: 1, isAvatar: 1 }
+    );
+
+    const AllStatus = [myStatus, ...contactStatus];
+
+    if (contactStatus.length > 0) {
+      const modifiedStatus = AllStatus.filter(
+        (item) => item.mediaStatus.length > 0
+      );
+
+      return res.status(200).send(modifiedStatus);
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send("Internal Server Error");
+  }
+};
+
+const deleteMediaStatus = async (req, res) => {
+  const { userId } = req;
+  const { index } = req.body;
+
+  const user = await User.findById(userId);
+
+  user.mediaStatus = user.mediaStatus.filter((item, i) => {
+    if (i !== index) {
+      return item;
+    }
+  });
+
+  await user.save();
+
+  return res.status(200).send("Status deleted successfully");
 };
 
 export {
@@ -409,10 +494,12 @@ export {
   mediaStatus,
   groupGetById,
   profileUpdate,
+  getMediaStatus,
   searchProfiles,
   getProfileData,
   getGroupChatData,
   getChatWithinData,
+  deleteMediaStatus,
   groupSettingUpdate,
   handleContactOperations,
 };

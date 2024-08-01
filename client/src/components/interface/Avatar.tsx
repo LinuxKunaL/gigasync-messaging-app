@@ -56,7 +56,7 @@ function Avatar({ data, rounded, className, size }: Props) {
         />
       ) : (
         <div
-          className={`size-14 ${size} select-none bg-gradient-to-bl ${
+          className={`${sizeVariant[size]} select-none bg-gradient-to-bl ${
             rounded ? "rounded-full" : "rounded-lg"
           } flex items-center justify-center text-bunker-50 font-semibold relative overflow-hidden ${
             colorVariant[data?.avatarColor]

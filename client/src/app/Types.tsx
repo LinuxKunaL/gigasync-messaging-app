@@ -6,6 +6,7 @@ export type TUser = {
   avatarColor?: string;
   status?: string;
   lastSeen?: string;
+  contacts?: string[];
   profile?: {
     privacy: {
       profilePhoto?: boolean;
@@ -15,6 +16,13 @@ export type TUser = {
     about?: string;
     avatar?: string;
   };
+  mediaStatus?: {
+    createdAt: Date;
+    expiredAt?: Date;
+    type: string;
+    file: string;
+    caption: string;
+  }[];
 };
 
 export type TGroup = {

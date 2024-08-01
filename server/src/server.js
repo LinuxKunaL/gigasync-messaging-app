@@ -3,7 +3,6 @@ import cors from "cors";
 import Express from "express";
 import config from "../config/config.js";
 import defaultRoutes from "./routes/default.routes.js";
-import ChatHandleIO from "./utils/chatHandleIO.js";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import connection from "../database/connection.js";
@@ -18,16 +17,12 @@ const server = http.createServer(app);
 const io = new Server(server, {
   maxHttpBufferSize: 1e8,
   cors: {
-    origin:"*",
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
 
-// const chatHandleIO = new ChatHandleIO(io);
-// chatHandleIO.run();
-
 const socket = new socketConnection(io);
-
 socket.connect();
 
 app.use(cors());

@@ -52,11 +52,12 @@ const getAvatar = async (req, res) => {
 };
 
 const getChatImage = (req, res) => {
-  const { filename, _id, type } = req.query;
+  const { filename, _id, type, format } = req.query;
   const chatImage = path.join(
     __dirname,
-    `../data/${type}-${_id}/images/${filename}`
+    `../data/${type}-${_id}/${format}/${filename}`
   );
+
   if (!fs.existsSync(chatImage)) {
     return res.status(404).send("Not Found");
   }

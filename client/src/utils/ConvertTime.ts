@@ -1,4 +1,4 @@
-const convertTime = (param: Date, type?: string): string => {
+const convertTime = (param: Date, type: "full" | "day"): string => {
   if (type == "full") {
     return new Date(param).toLocaleString();
   }

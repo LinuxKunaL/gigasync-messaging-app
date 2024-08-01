@@ -54,7 +54,7 @@ const register = async (req, res) => {
         exec(`mkdir src/data/user-${user._id}`, (err, stdout, stderr) => {
           if (err) console.log(err);
           exec(
-            `cd src/data/user-${user._id} && mkdir audios documents images videos recordings`
+            `cd src/data/user-${user._id} && mkdir audios status documents images videos recordings`
           );
         });
 

@@ -12,4 +12,5 @@ export const handleCatchError = (error: AxiosError) => {
     toastError(error.message);
     console.log("Error:", error.message);
   }
+  
 }

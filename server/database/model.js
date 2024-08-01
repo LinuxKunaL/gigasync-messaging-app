@@ -79,7 +79,7 @@ const ChatSchema = new Schema({
   ],
 });
 
-const groupsSchema = new Schema({
+const GroupsSchema = new Schema({
   groupDetails: {
     name: { type: String, unique: true },
     description: { type: String },
@@ -140,6 +140,8 @@ const groupsSchema = new Schema({
   ],
 });
 
+
+
 export const ChatModel = mongoose.model("Chat", ChatSchema);
 export const User = mongoose.model("User", UserSchema);
-export const groups = mongoose.model("groups", groupsSchema);
+export const groups = mongoose.model("groups", GroupsSchema);

@@ -3,16 +3,18 @@ import {
   groupList,
   getAllChat,
   groupCreate,
+  mediaStatus,
   groupUpdate,
   groupGetById,
   profileUpdate,
+  getMediaStatus,
   searchProfiles,
   getProfileData,
   getGroupChatData,
   getChatWithinData,
+  deleteMediaStatus,
   groupSettingUpdate,
   handleContactOperations,
-  mediaStatus,
 } from "../controller/user.controller.js";
 import { upload } from "../utils/storage.js";
 
@@ -24,6 +26,8 @@ router.post("/group/update", groupUpdate);
 router.post("/group/updateSetting", groupSettingUpdate);
 
 router.post("/setMediaStatus", mediaStatus);
+router.post("/getMediaStatus", getMediaStatus);
+router.post("/deleteMediaStatus", deleteMediaStatus);
 
 router.post("/profile/search", searchProfiles);
 router.post("/profile/getById", getProfileData);

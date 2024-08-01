@@ -82,7 +82,7 @@ function Register({}: Props) {
       "violet",
       "rose",
       "slate",
-      "neutral,",
+      "neutral",
     ];
     return colors[Math.floor(Math.random() * colors.length)];
   };
