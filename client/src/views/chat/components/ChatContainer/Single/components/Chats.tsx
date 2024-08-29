@@ -226,7 +226,7 @@ function Chats({ props }: Props) {
               <Icon variant="transparent">
                 <MdLocationSearching
                   onClick={handlePointMessage}
-                  className="text-lg bg-bunker-50 dark:text-bunker-50 cursor-pointer"
+                  className="text-lg dark:text-bunker-50 cursor-pointer"
                 />
               </Icon>
             </div>
