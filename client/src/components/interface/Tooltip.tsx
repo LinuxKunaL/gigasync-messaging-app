@@ -20,7 +20,7 @@ function ToolTip({ id, className, content, children, place }: Props) {
         <Tooltip
           id={id}
           place={place}
-          className={`${className} dark:!bg-bunker-800 !bg-bunker-200 dark:!text-bunker-50 !text-bunker-800`}
+          className={`${className} dark:!bg-bunker-800 !bg-bunker-50 dark:!text-bunker-50 !text-bunker-800`}
         />
       </div>
     </div>

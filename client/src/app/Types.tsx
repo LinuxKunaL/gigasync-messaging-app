@@ -23,6 +23,7 @@ export type TUser = {
     file: string;
     caption: string;
   }[];
+  socketId?: string;
 };
 
 export type TGroup = {
@@ -38,6 +39,9 @@ export type TGroup = {
     privacy: {
       isPhotoAllowed?: boolean;
       isVideoAllowed?: boolean;
+      isVoiceAllowed?: boolean;
+      isAudioAllowed?: boolean;
+      isFileAllowed?: boolean;
       isChatAllowed?: boolean;
     };
     private: boolean;
@@ -58,6 +62,7 @@ export type TMessages = {
   receiver: TUser;
   timestamp: Date | undefined;
   replyMessage?: {
+    id: string;
     message: {
       file: {
         name?: string;
@@ -94,7 +99,29 @@ type TCall = {
   };
 };
 
+export type TUfile = {
+  data?: {
+    name: string;
+    type: string;
+    size: number;
+    buffer: any;
+  };
+  visible: {
+    image?: boolean;
+    video?: boolean;
+    file?: boolean;
+    audio?: boolean;
+  };
+  fileType?: "image" | "video" | "file" | "audio";
+};
+
 export type TCallStates = {
   do: TCall;
   pick: TCall;
+};
+
+export type TReaderResult = {
+  image?: string | ArrayBuffer | null;
+  video?: string | ArrayBuffer | null;
+  audio?: string | ArrayBuffer | null;
 };

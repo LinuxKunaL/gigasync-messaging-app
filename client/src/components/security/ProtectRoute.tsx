@@ -18,11 +18,30 @@ function ProtectRoute({ children }: Props) {
     api
       .post("api/auth/verifyDashboard")
       .then((Response) => {
+
+        // if (Response.data.success) {
+        //   localStorage.setItem("token", Response.data.token);
+        //   return setTimeout(() => {
+        //     navigate("/~");
+        //   }, 1200);
+        // }
+
+        // if (Response.data.isInvalid) {
+        //   navigate("/login");
+        //   localStorage.removeItem("token");
+        // }
+
+        // if (Response.data.isExpired) {
+        //   navigate("/login");
+        //   localStorage.removeItem("token");
+        // }
+
         setLoading(false);
+        navigate("/~");
       })
       .catch((err) => {
         console.log(err);
-        navigate("/login");
+        // navigate("/login");
       });
 
     return () => {

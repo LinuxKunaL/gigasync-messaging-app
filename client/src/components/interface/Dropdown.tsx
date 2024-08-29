@@ -11,6 +11,7 @@ type Props = {
   trigger?: React.ReactNode;
   placement?: "top" | "right" | "bottom" | "left" | undefined;
   className?: string;
+  disabled?: boolean;
 };
 
 function Dropdown({
@@ -18,6 +19,7 @@ function Dropdown({
   children,
   placement = "bottom",
   className,
+  disabled,
 }: Props) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -45,16 +47,16 @@ function Dropdown({
   return (
     <div className="relative" ref={dropdownRef}>
       <div onClick={() => setOpen(!open)}>{children}</div>
-      {open && (
+      {open && !disabled && (
         <div
           ref={dropdownMenuRef}
-          className={`${placements[placement]} ${className} z-10 bg-white divide-y divide-gray-100 rounded-lg  w-max dark:bg-bunker-900 absolute mt-2`}
+          className={`${placements[placement]} ${className} z-10 bg-white border-[1px] border-bunker-600/10 divide-y divide-gray-100 rounded-lg w-max dark:bg-bunker-900 absolute mt-2`}
         >
-          <ul className="py-2 flex flex-col gap-2 text-sm text-gray-700 dark:text-gray-200">
+          <ul className="py-2 flex flex-col gap-1 sm:gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-200">
             {options.map((item, index) => (
               <div
                 className={`${item.className} block  ${
-                  item.element ? "px-4 py-2" : null
+                  item.element ? "sm:px-4 sm:py-2 px-3 py-1.5" : null
                 } hover:bg-gray-100 dark:hover:bg-bunker-700 dark:hover:text-white cursor-pointer`}
                 key={index}
                 onClick={item.onClick}

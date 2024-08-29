@@ -2,24 +2,32 @@ import fs from "fs";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
 import { exec } from "child_process";
+import { User } from "../../database/model.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const uploadFile = (file, _id, type) => {
-  const fileName = `${Date.now()}-${file.name}`.replace(/[^a-zA-Z0-9.]+/g, '-');
+  const fileName = `${file.name.split(".")[0]}-${Date.now()}.${
+    file.name.split(".")[1]
+  }`.replace(/[^a-zA-Z0-9.]+/g, "-");
 
   if (file.type.includes("image")) {
-    const filepath = path.join(
-      __dirname,
-      `../data/${type}-${_id}`,
-      "images",
-      fileName
-    );
+    const filepath = path.join(__dirname, `../data/${type}-${_id}`, "images");
 
-    fs.writeFile(filepath, file.buffer, (Err) => {
+    if (!fs.existsSync(filepath)) {
+      fs.mkdirSync(filepath, { recursive: true });
+    }
+
+    fs.writeFile(`${filepath}/${fileName}`, file.buffer, (Err) => {
       console.log(Err);
     });
+
+    return {
+      size: file.size,
+      type: file.type,
+      name: fileName,
+    };
   }
 
   if (file.type.includes("video")) {
@@ -33,13 +41,14 @@ const uploadFile = (file, _id, type) => {
     const filepathWithNewName = path.join(
       __dirname,
       `../data/${type}-${_id}`,
-      "videos",
-      fileName
+      "videos"
     );
 
-    console.log(filepathWithNewName);
+    if (!fs.existsSync(filepathWithNewName)) {
+      fs.mkdirSync(filepathWithNewName, { recursive: true });
+    }
 
-    fs.writeFile(filepathWithNewName, file.buffer, (Err) => {
+    fs.writeFile(`${filepathWithNewName}/${fileName}`, file.buffer, (Err) => {
       console.log(Err);
     });
 
@@ -66,7 +75,65 @@ const uploadFile = (file, _id, type) => {
     //     }, 2000);
     //   }
     // );
+
+    return {
+      size: file.size,
+      type: file.type,
+      name: fileName,
+    };
   }
+
+  if (file.type.includes("audio")) {
+    const filepath = path.join(__dirname, `../data/${type}-${_id}`, "audios");
+
+    if (!fs.existsSync(filepath)) {
+      fs.mkdirSync(filepath, { recursive: true });
+    }
+
+    fs.writeFile(`${filepath}/${fileName}`, file.buffer, (Err) => {
+      console.log(Err);
+    });
+
+    return {
+      size: file.size,
+      type: file.type,
+      name: fileName,
+    };
+  }
+
+  if (file.type.includes("recording")) {
+    const recordingFilename = `recording-${Date.now()}.mp3`;
+
+    const filepath = path.join(
+      __dirname,
+      `../data/${type}-${_id}`,
+      "recordings"
+    );
+
+    if (!fs.existsSync(filepath)) {
+      fs.mkdirSync(filepath, { recursive: true });
+    }
+
+    fs.writeFile(`${filepath}/${recordingFilename}`, file.buffer, (Err) => {
+      console.log(Err);
+    });
+
+    return {
+      size: file.size,
+      type: file.type,
+      name: recordingFilename,
+    };
+  }
+
+  const filepath = path.join(__dirname, `../data/${type}-${_id}`, "files");
+
+  if (!fs.existsSync(filepath)) {
+    fs.mkdirSync(filepath, { recursive: true });
+  }
+
+  fs.writeFile(`${filepath}/${fileName}`, file.buffer, (Err) => {
+    console.log(Err);
+  });
 
   return {
     size: file.size,

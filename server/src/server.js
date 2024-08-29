@@ -9,12 +9,13 @@ import connection from "../database/connection.js";
 import verifyToken from "./middleware/verifyToken.js";
 import { Server } from "socket.io";
 import socketConnection from "./socket/socketConnection.js";
+import cronSchedule from "./utils/cron.js";
 
 const app = Express();
 
 const server = http.createServer(app);
 
-const io = new Server(server, {
+export const io = new Server(server, {
   maxHttpBufferSize: 1e8,
   cors: {
     origin: "*",
@@ -35,6 +36,7 @@ app.use("/api/user", verifyToken, userRoutes);
 
 console.clear();
 connection();
+cronSchedule();
 
 server.listen(config.server.port, () => {
   console.log(`Server started on port ${config.server.port}`);

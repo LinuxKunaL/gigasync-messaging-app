@@ -22,7 +22,7 @@ function Input({
   return (
     <input
       name={name}
-      className={`px-4 py-2 ${className} border-[1px] dark:text-bunker-200 dark:border-bunker-700/40 dark:bg-bunker-900 focus:dark:!bg-bunker-920 focus:!bg-bunker-50 focus:!border-cyan-500 outline-none transition-all w-full bg-white rounded-lg`}
+      className={`px-2 py-1 sm:px-4 sm:py-2 ${className} border-[1px] dark:text-bunker-200 dark:border-bunker-700/40 dark:bg-bunker-900 focus:dark:!bg-bunker-920 focus:!bg-bunker-50 focus:!border-cyan-500 outline-none transition-all w-full bg-white rounded-lg sm:text-base text-sm`}
       type={type}
       placeholder={placeholder}
       onChange={onChange}

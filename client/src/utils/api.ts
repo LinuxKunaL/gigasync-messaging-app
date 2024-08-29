@@ -17,4 +17,22 @@ api.interceptors.request.use(
   }
 );
 
+api.interceptors.response.use(
+  (Response) => {
+    if (Response.data?.isInvalid) {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
+    if (Response.data?.isExpired) {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
+    return Response;
+  },
+  (error) => {
+    console.log(error);
+    return Promise.reject(error);
+  }
+);
+
 export default api;

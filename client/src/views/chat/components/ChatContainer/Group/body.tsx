@@ -1,11 +1,8 @@
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 import { TGroup, TMessages, TUser } from "../../../../../app/Types";
-import { toastError } from "../../../../../app/Toast";
-import { setCallState } from "../../../../../app/Redux";
 
 import api from "../../../../../utils/api";
-import socket from "../../../../../app/Socket";
 import Chats from "./components/Chats";
 import InputMessage from "./components/InputMessage";
 import Navigation from "./components/NavigationBar";
@@ -16,16 +13,13 @@ type TReplyMessage = {
 };
 
 function Body() {
-  const dispatch = useDispatch();
   const [selectedGroup, setSelectedGroup] = useState<TGroup>();
   const [replyMessage, setReplyMessage] = useState<TReplyMessage>({
     visible: false,
     data: null,
   });
-
-  const [loadUserData, setLoadUserData] = useState<number>(0);
   const [messageLoading, setMessageLoading] = useState<Boolean>(false);
-
+  const [isSearchVisible, setIsSearchVisible] = useState<boolean>(false);
   const SActiveGroupChat: TUser = useSelector(
     (state: any) => state.currentGroupChat
   );
@@ -38,29 +32,26 @@ function Body() {
       .then((res) => {
         setSelectedGroup(res.data);
       });
-  }, [loadUserData, SActiveGroupChat]);
-
-  // useEffect(() => {
-  //   socket.on("status", (data: []) => {
-  //     data?.forEach(
-  //       (user: { _id: string }) =>
-  //         user._id === SUserProfile._id && setLoadUserData(loadUserData + 1)
-  //     );
-  //   });
-  //   return () => {
-  //     socket.off("status");
-  //   };
-  // }, [selectedContact]);
+  }, [SActiveGroupChat]);
 
   return (
-    <div className="dark:bg-bunker-950 h-full w-full flex flex-col relative">
+    <div className="dark:bg-bunker-950 h-full w-full bg-bunker-200 flex flex-col absolute lg:relative z-10">
       <div className="h-full w-full flex flex-col overflow-y-auto no-scrollbar z-10">
-        <Navigation props={{ selectedGroup }} />
-        <Chats
+        <Navigation
           props={{
             selectedGroup,
+            setIsSearchVisible,
+            isSearchVisible,
+          }}
+        />
+        <Chats
+          props={{
+            isSearchVisible,
+            setMessageLoading,
             messageLoading,
             setReplyMessage,
+            selectedGroup,
+            setIsSearchVisible,
           }}
         />
       </div>
@@ -68,15 +59,13 @@ function Body() {
         props={{
           selectedGroup,
           setReplyMessage,
+          setMessageLoading,
           replyMessage,
         }}
       />
       <div className="aa absolute h-full w-full -z-1" />
-      {/* <div className="absolute p-2 bg-red-400 bottom-0 text-white  text-2xl z-40">
-        {SUserProfile._id}
-      </div> */}
     </div>
   );
 }
 
-export default Body;
+export default memo(Body);

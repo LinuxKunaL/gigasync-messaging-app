@@ -1,21 +1,29 @@
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 
 import Login from "./views/Login";
 import Register from "./views/Register";
 import Main from "./views/chat/Main";
-
-import { Toaster } from "react-hot-toast";
 import ProtectRoute from "./components/security/ProtectRoute";
+import ForgotPassword from "./views/ForgotPassword";
+
 import "./index.css";
 
 type Props = {};
 
 function App({}: Props) {
   const themeRefresh = useSelector((state: any) => state.themeRefresh);
+
   useEffect(() => {
-    const theme = localStorage.getItem("theme");
+    let theme = localStorage.getItem("theme");
+
+    if (!theme) {
+      theme = "dark";
+      localStorage.setItem("theme", theme);
+    }
+
     if (theme === "dark") {
       document.body.classList.add("dark");
     } else {
@@ -32,6 +40,7 @@ function App({}: Props) {
           <Route path="*" element={<div>404</div>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgotPassword" element={<ForgotPassword />} />
           <Route
             path="/~"
             element={

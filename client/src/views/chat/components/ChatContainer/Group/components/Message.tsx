@@ -1,147 +1,87 @@
 import {
-  MdContentCopy,
-  MdDelete,
-  MdMoreVert,
-  MdOutlineFileDownload,
+  MdAttachFile,
+  MdDownload,
   MdPlayArrow,
-  MdReply,
+  MdOutlineFileDownload,
 } from "react-icons/md";
-import { TMessages, TUser } from "../../../../../../app/Types";
-import { useSelector } from "react-redux";
-import { deleteMessage } from "../../../../../../utils/deleteMessage";
-import { toastSuccess, toastWarning } from "../../../../../../app/Toast";
-
-import Dropdown from "../../../../../../components/interface/Dropdown";
+import { TMessages } from "../../../../../../app/Types";
 import convertTime from "../../../../../../utils/ConvertTime";
 import Avatar from "../../../../../../components/interface/Avatar";
+import Audio from "../../../../../../components/interface/Audio";
+import WaveAudio from "../../../../../../components/interface/WaveAudio";
+import ToolTip from "../../../../../../components/interface/Tooltip";
+import MessageCorner from "../../../../../../assets/svgs/MessageCorner";
+import downloadFile from "../../../../../../utils/DownloadFile";
 
 type Props = {
   props: {
     message: TMessages;
+    isSamePrevious: boolean;
+    isOwnMessage: boolean;
     groupId: string | undefined;
+    handlePointReplyMessage: (param: any) => void;
     setPlayVideo: (param: any) => void;
-    setReplyMessage: (param: any) => void;
-    downloadFile: (link: string, filename: string) => void;
   };
 };
 
 function Message({ props }: Props) {
-  const SUserProfile: TUser = useSelector(
-    (state: any) => state.UserAccountData
-  );
-
   return (
     <div
       key={props.message?._id}
-      className={`flex flex-row gap-3 relative ${
-        SUserProfile?._id === props.message?.sender?._id
-          ? "flex-row-reverse"
-          : "justify-start"
+      id={props.message?._id}
+      className={`flex flex-row gap-2 sm:gap-3 relative animate-fade-in ${
+        props.isOwnMessage ? "flex-row-reverse" : "justify-start"
       }`}
     >
-      <Avatar rounded data={props.message?.sender} size="xxl" />
+      {!props.isSamePrevious && !props.isOwnMessage && (
+        <Avatar data={props.message?.sender} size="xxl" rounded />
+      )}
+      {props.isSamePrevious && !props.isOwnMessage && (
+        <div className="sm:w-14 sm:text-md w-10 text-sm" />
+      )}
       <div
-        className={` flex flex-col gap-1 relative ${
-          SUserProfile?._id === props.message?.sender?._id
-            ? "flex-row-reverse self-end"
-            : "justify-start self-start"
-        }`}
+        className={`flex self-center flex-col p-2 sm:px-4 relative rounded-b-xl ${
+          props.isOwnMessage
+            ? "flex-row-reverse self-end rounded-l-lg dark:bg-cyan-700 bg-cyan-400"
+            : "justify-start self-start rounded-r-lg dark:bg-bunker-900 bg-bunker-100"
+        } ${props.isSamePrevious && "rounded-r-lg rounded-l-lg"}`}
       >
-        <div className="flex flex-row gap-5 justify-between">
-          <h1 className="dark:text-bunker-100 text-lg">
+        {!props.isSamePrevious && (
+          <MessageCorner isOwnMessage={props.isOwnMessage} />
+        )}
+        {!props.isSamePrevious && !props.isOwnMessage && (
+          <ColoredName color={props?.message?.sender?.avatarColor as any}>
             {props.message?.sender?.fullName}
-          </h1>
-          <div className="dark:text-bunker-200/70 text-bunker-600 text-xs flex justify-between gap-1 items-center">
-            {convertTime(props.message?.timestamp as any, "day")}
-            <Dropdown
-              options={[
-                SUserProfile?._id === props.message?.sender?._id
-                  ? {
-                      element: (
-                        <div className="flex gap-1 items-center">
-                          <MdDelete /> delete
-                        </div>
-                      ),
-                      onClick() {
-                        deleteMessage({
-                          messageId: props.message?._id,
-                          receiver: props.message?.receiver._id,
-                          sender: props.message?.sender._id,
-                        });
-                        toastSuccess("Message deleted");
-                      },
-                    }
-                  : {},
-                {
-                  element: (
-                    <div className="flex gap-1 items-center">
-                      <MdContentCopy /> copy
-                    </div>
-                  ),
-                },
-                {
-                  element: (
-                    <div className="flex gap-1 items-center">
-                      <MdReply /> reply
-                    </div>
-                  ),
-                  onClick() {
-                    props?.setReplyMessage({
-                      visible: props.message?.message.text ? true : false,
-                      data: props.message?.message.text ? props?.message : null,
-                    });
-                  },
-                },
-              ]}
-              placement={
-                SUserProfile?._id === props.message?.sender?._id
-                  ? "right"
-                  : "left"
-              }
-              className={
-                SUserProfile?._id === props.message?.sender?._id
-                  ? "right-1"
-                  : "left-7"
-              }
-            >
-              <MdMoreVert className="text-lg cursor-pointer" />
-            </Dropdown>
-          </div>
-        </div>
-        <div
-          className={`p-4 flex flex-col gap-2 w-full overflow-hidden
-                    ${
-                      SUserProfile?._id === props.message?.sender?._id
-                        ? "rounded-l-xl rounded-b-xl dark:bg-cyan-700 bg-cyan-400 self-end"
-                        : "rounded-r-xl rounded-b-xl dark:bg-bunker-900 bg-bunker-100 self-start"
-                    }`}
-        >
-          {props.message?.message.file.type === "image" ? (
+          </ColoredName>
+        )}
+        <div className="flex flex-col w-full">
+          {props.message?.message.file.type === "image" && (
             <div className="relative">
               <img
-                src={`${process.env.REACT_APP_BACKEND_HOST}/api/default/messageImage?filename=${props.message?.message.file.name}&_id=${props.groupId}&type=group`}
-                className="w-[400px] h-[400px] object-cover rounded-md"
+                src={`${process.env.REACT_APP_BACKEND_HOST}/api/default/getMedia/group-${props.groupId}/images/${props.message?.message.file.name}`}
+                className="sw-[400px] h-[350px] object-cover rounded-md"
               />
               <div
                 onClick={() =>
-                  props?.downloadFile(
-                    `${process.env.REACT_APP_BACKEND_HOST}/api/default/messageImage?filename=${props.message?.message.file.name}&_id=${props.groupId}&type=group`,
+                  downloadFile(
+                    `${process.env.REACT_APP_BACKEND_HOST}/api/default/getMedia/group-${props.groupId}/images/${props.message?.message.file.name}`,
                     props.message?.message.file.name as string
                   )
                 }
                 className={`absolute ${
-                  SUserProfile?._id === props.message?.sender?._id
-                    ? "bg-cyan-700"
-                    : "bg-bunker-900"
-                }  text-white p-3 cursor-pointer rounded-bl-md top-0 right-0`}
+                  props.isOwnMessage
+                    ? "dark:bg-cyan-700 bg-cyan-400 text-white"
+                    : "dark:bg-bunker-900 bg-bunker-200s text-bunker-800"
+                }  dark:text-white p-3 cursor-pointer rounded-bl-md top-0 right-0`}
               >
                 <MdOutlineFileDownload />
               </div>
             </div>
-          ) : props.message?.message.file.type === "video" ? (
+          )}
+          {props.message?.message.file.type === "video" && (
             <div className="relative rounded-md overflow-hidden">
               <video
-                src={`${process.env.REACT_APP_BACKEND_HOST}/api/default/messageVideo/group-${props.groupId}/videos/${props.message?.message.file.name}`}
+                src={`${process.env.REACT_APP_BACKEND_HOST}/api/default/getMedia/group-${props?.groupId}/videos/${props.message?.message.file.name}`}
                 contextMenu="none"
                 controls={false}
                 className="blur-sm h-[14pc] w-full object-cover rounded-md"
@@ -151,45 +91,142 @@ function Message({ props }: Props) {
                 onClick={() => {
                   props?.setPlayVideo({
                     visible: true,
-                    url: `${process.env.REACT_APP_BACKEND_HOST}/api/default/messageVideo/group-${props.groupId}/videos/${props.message?.message.file.name}`,
+                    url: `${process.env.REACT_APP_BACKEND_HOST}/api/default/getMedia/group-${props?.groupId}/videos/${props.message?.message.file.name}`,
                   });
                 }}
                 className="size-10 p-1 cursor-pointer rounded-full text-white bg-cyan-600 absolute z-1 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
               />
             </div>
-          ) : null}
-          {props.message?.replyMessage ? (
+          )}
+          {props.message?.message.file.type === "audio" && (
+            <Audio
+              src={`${process.env.REACT_APP_BACKEND_HOST}/api/default/getMedia/group-${props.groupId}/audios/${props.message?.message.file.name}`}
+              fileName={props.message?.message.file.name as string}
+              variant={props.isOwnMessage ? "sender" : "receiver"}
+              className="!h-auto"
+            />
+          )}
+          {props.message?.message.file.type === "recording" && (
+            <>
+              <WaveAudio
+                id={props.message?._id as string}
+                src={`${process.env.REACT_APP_BACKEND_HOST}/api/default/getMedia/group-${props.groupId}/recordings/${props.message?.message.file.name}`}
+                variant={props.isOwnMessage ? "sender" : "receiver"}
+              />
+            </>
+          )}
+          {props.message?.message.file.type === "file" && (
+            <ToolTip
+              id={props.message?._id as string}
+              content={props.message?.message.file.name as string}
+            >
+              <div
+                className={`p-2 sm:p-3 cursor-pointer ${
+                  props.isOwnMessage ? "bg-cyan-600" : "bg-bunker-700"
+                } rounded-md text-bunker-50 flex flex-row gap-2 items-center`}
+              >
+                <MdAttachFile />
+                <p className="w-[8pc] sm:text-base text-xs truncate">
+                  {props.message?.message.file.name &&
+                    props.message?.message.file.name.slice(14)}
+                </p>
+                <MdDownload
+                  onClick={() =>
+                    downloadFile(
+                      `${process.env.REACT_APP_BACKEND_HOST}/api/default/getMedia/group-${props.groupId}/files/${props.message?.message.file.name}`,
+                      props.message?.message.file.name as string
+                    )
+                  }
+                />
+              </div>
+            </ToolTip>
+          )}
+          {props.message?.replyMessage && (
             <div
               className={`${
-                SUserProfile?._id === props.message?.sender?._id
-                  ? "bg-cyan-600"
-                  : "dark:bg-bunker-700 bg-bunker-200"
-              } ${
-                props.message?.replyMessage.message.text.length < 30
-                  ? "w-[10pc]"
-                  : "w-[40pc]"
-              }  p-2 rounded-md`}
+                props.isOwnMessage
+                  ? "bg-cyan-600 hover:bg-cyan-600/50"
+                  : "dark:bg-bunker-700 bg-bunker-200 over:bg-bunker-700/50"
+              } w-full cursor-pointer p-2 rounded-md`}
+              onClick={() =>
+                props.handlePointReplyMessage(props.message.replyMessage?.id)
+              }
             >
-              <h3 className="text-base font-semibold dark:text-bunker-200 text-bunker-500">
+              <h3 className="text-sm sm:text-lg font-semibold dark:text-bunker-200 text-bunker-500">
                 {props.message?.replyMessage.to.fullName}
               </h3>
-              <p className="text-base dark:text-bunker-300 text-bunker-600">
+              <p
+                className={`text-xs sm:text-base dark:text-bunker-300 text-bunker-600 truncate ${
+                  props.message?.replyMessage.message.text.length < 30
+                    ? "w-[8pc]"
+                    : "w-[13pc]"
+                } `}
+              >
                 {props.message?.replyMessage.message.text}
               </p>
             </div>
-          ) : null}
+          )}
+          {props.message?.message.file.type !== "text" &&
+            props.message?.message.file.type !== "del" && (
+              <div className="w-14 h-3.5" />
+            )}
+          {props.message.message.text && (
+            <p
+              className={`dark:text-bunker-200 text-bunker-50d text-sm sm:text-base flex gap-1 ${
+                props.message?.message.file.type === "del" &&
+                "opacity-70 italic"
+              } ${props.message?.message.text.length > 30 && "w-[15pc]"}
+                 ${props.isOwnMessage ? "text-bunker-50" : "text-bunker-700"}`}
+            >
+              {props.message?.message.text}
+              <div className="w-14" />
+            </p>
+          )}
           <p
-            className={`dark:text-bunker-200 text-bunker-700 ${
-              props.message?.message.file.type === "del"
-                ? " opacity-70 italic"
-                : ""
-            }`}
+            className={`text-xs rounded-md backdrop-blur-sm px-0.5 absolute bottom-2 font-normal dark:text-bunker-300  
+                 ${
+                   props.isOwnMessage ? "text-bunker-100" : "text-bunker-600"
+                 } self-end translate-y-1`}
           >
-            {props.message?.message.text}
+            {convertTime(props.message?.timestamp as any, "day")}
           </p>
         </div>
       </div>
     </div>
+  );
+}
+
+function ColoredName({
+  children,
+  color,
+}: {
+  children: React.ReactNode;
+  color: string | any;
+}) {
+  const TextColor: any = {
+    red: "text-red-500",
+    blue: "text-blue-500",
+    green: "text-green-500",
+    pink: "text-pink-500",
+    yellow: "text-yellow-500",
+    purple: "text-purple-500",
+    orange: "text-orange-500",
+    gray: "text-gray-500",
+    cyan: "text-cyan-500",
+    emerald: "text-emerald-500",
+    lime: "text-lime-500",
+    indigo: "text-indigo-500",
+    fuchsia: "text-fuchsia-500",
+    sky: "text-sky-500",
+    violet: "text-violet-500",
+    rose: "text-rose-500",
+    slate: "text-slate-500",
+    neutral: "text-neutral-500",
+  };
+  return (
+    <h1 className={`${TextColor[color]} text-sm sm:text-lg font-semibold`}>
+      {children}
+    </h1>
   );
 }
 

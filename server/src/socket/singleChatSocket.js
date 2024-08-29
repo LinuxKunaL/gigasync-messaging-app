@@ -1,5 +1,7 @@
+import config from "../../config/config.js";
 import { ChatModel, User } from "../../database/model.js";
 import { uploadFile } from "../utils/fileOperations.js";
+import { exec } from "child_process";
 
 class singleChatSocket {
   constructor(socket, io) {
@@ -48,7 +50,8 @@ class singleChatSocket {
       }
     ).populate({
       path: "messages.sender messages.receiver messages.replyMessage.to",
-      select: "fullName username avatarColor isAvatar",
+      select:
+        "fullName username avatarColor isAvatar profile.privacy.profilePhoto",
       options: { strictPopulate: false },
     });
 
@@ -60,7 +63,7 @@ class singleChatSocket {
   async sendMessage(data) {
     const { me, to, message, replyMessage } = data;
     const { file } = message;
-    
+
     var fileData = {
       size: null,
       type: null,
@@ -68,18 +71,17 @@ class singleChatSocket {
     };
 
     const receiver = await User.findById(to);
-
-    if (!receiver.allChats.includes(me)) {
-      receiver.allChats.push(me);
-      await receiver.save();
-    }
-
     const sender = await User.findById(me);
 
-    if (!sender.allChats.includes(to)) {
-      sender.allChats.push(to);
-      await sender.save();
-    }
+    receiver.allChats = receiver.allChats.filter(
+      (chat) => chat.toString() !== me
+    );
+    receiver.allChats.unshift(me);
+    await receiver.save();
+
+    sender.allChats = sender.allChats.filter((chat) => chat.toString() !== to);
+    sender.allChats.unshift(to);
+    await sender.save();
 
     const receiverSocketId = receiver ? receiver.socketId : null;
 
@@ -89,6 +91,25 @@ class singleChatSocket {
 
     if (file.type !== "text") {
       fileData = uploadFile(file.data, me, "user");
+
+      const folder = {
+        file: "files",
+        image: "images",
+        video: "videos",
+        audio: "audios",
+        recording: "recordings",
+      };
+
+      sender.files.push({
+        url: `user-${sender.id}/${folder[file.type]}/${fileData.name}`,
+        size: fileData.size,
+        type: file.type,
+        name: fileData.name,
+        chat: "single",
+        chatId: me + to,
+      });
+
+      await sender.save();
     }
 
     if (!chat) {
@@ -104,6 +125,7 @@ class singleChatSocket {
             size: fileData.size,
           },
           text: message.text,
+          links: message.links,
         },
         sender: me,
         receiver: to,
@@ -114,7 +136,8 @@ class singleChatSocket {
 
       const populatedChat = await newMessage.populate({
         path: "messages.sender messages.receiver messages.replyMessage.to",
-        select: "fullName username avatarColor isAvatar",
+        select:
+          "fullName username avatarColor isAvatar profile.privacy.profilePhoto",
         options: { strictPopulate: false },
       });
 
@@ -130,7 +153,7 @@ class singleChatSocket {
 
       return null;
     }
-console.log(fileData.type);
+
     chat.messages.push({
       message: {
         file: {
@@ -139,6 +162,7 @@ console.log(fileData.type);
           size: fileData.size,
         },
         text: message.text,
+        links: message.links,
       },
       sender: me,
       receiver: to,
@@ -149,7 +173,8 @@ console.log(fileData.type);
 
     const populatedChat = await chat.populate({
       path: "chatWithin messages.sender messages.receiver messages.replyMessage.to",
-      select: "fullName username avatarColor isAvatar",
+      select:
+        "fullName username avatarColor isAvatar profile.privacy.profilePhoto",
       options: { strictPopulate: false },
     });
 
@@ -164,8 +189,8 @@ console.log(fileData.type);
   async deleteMessage(data) {
     const { sender, receiver, messageId } = data;
 
-    const _receiver = await User.findById(receiver);
-    const _receiverSocketId = _receiver ? _receiver.socketId : null;
+    const _receiver = await User.findById(receiver, { socketId: 1 });
+    const _sender = await User.findById(sender, { socketId: 1 });
 
     await ChatModel.findOneAndUpdate(
       {
@@ -188,13 +213,13 @@ console.log(fileData.type);
     this.selectContact({
       me: sender,
       to: receiver,
-      socketId: data.socketId,
+      socketId: _sender.socketId,
     });
 
     this.selectContact({
       me: receiver,
       to: sender,
-      socketId: _receiverSocketId,
+      socketId: _receiver.socketId,
     });
   }
 
@@ -206,7 +231,7 @@ console.log(fileData.type);
     };
 
     await User.findByIdAndUpdate(userId, data);
-    this.emitStatus();
+    this.emitStatus("online");
   }
 
   async unRegister() {
@@ -217,7 +242,7 @@ console.log(fileData.type);
     };
 
     await User.findOneAndUpdate({ socketId: this.socket.id }, data);
-    this.emitStatus();
+    this.emitStatus("offline");
 
     this.socket.off("sendMessage", this.sendMessage);
     this.socket.off("deleteMessage", this.deleteMessage);
@@ -225,7 +250,7 @@ console.log(fileData.type);
     this.socket.off("register", this.register);
   }
 
-  async emitStatus() {
+  async emitStatus(status) {
     const userForSocketId = await User.findOne({ socketId: this.socket.id });
 
     const chat = await ChatModel.findOne(
@@ -240,8 +265,14 @@ console.log(fileData.type);
       path: "chatWithin",
       select: "socketId",
     });
-    this.io.emit("status", chat?.chatWithin);
+
+    if (chat) {
+      chat.chatWithin.map((chat) => {
+        this.io.to(chat.socketId).emit("status", { status });
+      });
+    }
   }
+
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   /**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -257,7 +288,13 @@ console.log(fileData.type);
     const { from, to, signal, streamSetting } = data;
 
     const { socketId } = await User.findById(to);
-    const user = await User.findById(from);
+
+    const user = await User.findById(from, {
+      fullName: 1,
+      socketId: 1,
+      isAvatar: 1,
+      avatarColor: 1,
+    });
 
     this.io
       .to(socketId)

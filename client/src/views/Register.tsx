@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaGooglePlusG } from "react-icons/fa";
 import { toastError, toastSuccess, toastWarning } from "../app/Toast";
@@ -28,7 +28,12 @@ function Register({}: Props) {
     passwordConfirm: "",
   });
   const navigate = useNavigate();
-  
+
+  useEffect(() => {
+    const jwtToken = localStorage.getItem("token");
+    if (jwtToken) return navigate("/~");
+  }, []);
+
   const handleSubmitForm = () => {
     if (
       !formData.fullName ||
@@ -88,52 +93,57 @@ function Register({}: Props) {
   };
 
   return (
-    <div className="w-full h-full flex justify-center items-center">
-      <div className="p-5 border-[1px] dark:border-bunker-700/40 dark:bg-bunker-920 bg-white rounded-lg w-max flex flex-col gap-4 items-start">
+    <div className="w-full h-full flex justify-center items-center p-3">
+      <div className="p-4 sm:p-5 border-[1px] dark:border-bunker-700/40 dark:bg-bunker-920 bg-white rounded-lg w-max flex flex-col gap-2 sm:gap-4 items-start">
         <div className="flex flex-col gap-3">
-          <img src={Logo} className=" w-16" alt="" />
-          <h1 className="text-2xl dark:text-bunker-100 text-bunker-700 font-semibold">
+          <img src={Logo} className="w-12 sm:w-16" alt="" />
+          <h1 className="text-xl sm:text-2xl dark:text-bunker-100 text-bunker-700 font-semibold">
             Register
           </h1>
         </div>
         <p className="text-sm dark:text-bunker-500 text-bunker-600">
           Create a your account
         </p>
-        <p className="text-sm dark:text-bunker-300 text-bunker-500">
+        <p className="text-xs sm:text-sm hidden sm:block dark:text-bunker-300 text-bunker-500">
           Let's get you all setup, so you can verify your personal{" "}
           <b className="text-cyan-400">Account</b>
-          <br /> and begine setting up your profile.
+          <br /> and begins setting up your profile.
         </p>
-        <form className="w-full mt-4 flex flex-col gap-6">
+        <form className="w-full sm:mt-4 flex flex-col gap-4 sm:gap-6">
           <Input
             name="fullName"
             type="text"
             onChange={handleOnChange}
             placeholder="fullName"
+            className="h-[2.5pc]"
           />
           <Input
             name="email"
             type="email"
             onChange={handleOnChange}
             placeholder="Email"
+            className="h-[2.5pc]"
           />
           <Input
             name="username"
             type="text"
             onChange={handleOnChange}
             placeholder="Username"
+            className="h-[2.5pc]"
           />
           <Input
             name="password"
             type="password"
             onChange={handleOnChange}
             placeholder="Password confirm"
+            className="h-[2.5pc]"
           />
           <Input
             name="passwordConfirm"
             type="password"
             onChange={handleOnChange}
             placeholder="Password again"
+            className="h-[2.5pc]"
           />
         </form>
         <span className="flex items-center gap-2 mt-4 mb-3 cursor-pointer">
@@ -144,7 +154,7 @@ function Register({}: Props) {
           />
           <label
             htmlFor="checkbox"
-            className="text-sm dark:text-bunker-400 text-bunker-500"
+            className="text-xs sm:text-sm dark:text-bunker-400 text-bunker-500"
           >
             I agree to all the Terms & Conditions and Fees.
           </label>

@@ -1,37 +1,35 @@
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { TCallStates, TMessages, TUser } from "../../../../../app/Types";
-import { toastError } from "../../../../../app/Toast";
-import { setCallState } from "../../../../../app/Redux";
 
 import api from "../../../../../utils/api";
-import socket from "../../../../../app/Socket";
 import Chats from "./components/Chats";
 import InputMessage from "./components/InputMessage";
 import Navigation from "./components/NavigationBar";
 import VideoCall from "./components/VideoCall";
-import ChatDetailsBar from "../../ChatDetailsSidebar";
 
 type TReplyMessage = {
   visible: Boolean;
   data: TMessages | null;
 };
 
+type TSelectedContact = TUser & {
+  isBlockedForMe: Boolean;
+  isBlockedForUser: Boolean;
+};
+
 function Body() {
-  const dispatch = useDispatch();
-  const [selectedContact, setSelectedContact] = useState<TUser>();
+  const [selectedContact, setSelectedContact] = useState<TSelectedContact>();
   const [replyMessage, setReplyMessage] = useState<TReplyMessage>({
     visible: false,
     data: null,
   });
-
-  const [loadUserData, setLoadUserData] = useState<number>(0);
-  const [messageLoading, setMessageLoading] = useState<Boolean>(false);
+  const isBlockedForMe = selectedContact?.isBlockedForMe;
+  const isBlockedForUser = selectedContact?.isBlockedForUser;
+  const [messageLoading, setMessageLoading] = useState<boolean>(false);
+  const [isSearchVisible, setIsSearchVisible] = useState<boolean>(false);
 
   const SActiveChat: TUser = useSelector((state: any) => state.currentChat);
-  const SUserProfile: TUser = useSelector(
-    (state: any) => state.UserAccountData
-  );
 
   useEffect(() => {
     api
@@ -39,84 +37,42 @@ function Body() {
       .then((res) => {
         setSelectedContact(res.data);
       });
-  }, [loadUserData, SActiveChat]);
-
-  useEffect(() => {
-    socket.on("status", (data: []) => {
-      data?.forEach(
-        (user: { _id: string }) =>
-          user._id === SUserProfile._id && setLoadUserData(loadUserData + 1)
-      );
-    });
-
-    socket.on("OnIncomingCall", (data) => {
-      dispatch(
-        setCallState({
-          pick: {
-            video: {
-              visible: true,
-              data: data.user,
-              signal: data.signal,
-              streamSetting: data.streamSetting,
-            },
-          },
-        })
-      );
-    });
-
-    socket.on("OnCallCanceled", ({ fullName }) => {
-      dispatch(
-        setCallState({
-          pick: {
-            video: {
-              visible: false,
-              data: null,
-              signal: null,
-            },
-          },
-        })
-      );
-      toastError(`Call Canceled by ${fullName}`);
-    });
-
-    return () => {
-      socket.off("status");
-      socket.off("OnIncomingCall");
-      socket.off("OnCallCanceled");
-    };
-  }, [selectedContact]);
+  }, [SActiveChat]);
 
   return (
-    <div className="dark:bg-bunker-950 h-full w-full flex flex-col relative">
+    <div className="dark:bg-bunker-950 bg-bunker-200 h-full w-full flex flex-col absolute lg:relative z-10">
       <div className="h-full w-full flex flex-col overflow-y-auto no-scrollbar z-10">
-        <Navigation props={{ selectedContact }} />
+        <Navigation
+          props={{ selectedContact, setIsSearchVisible, isSearchVisible }}
+        />
         <Chats
           props={{
+            setIsSearchVisible,
+            isSearchVisible,
             selectedContact,
             messageLoading,
             setReplyMessage,
+            setMessageLoading,
           }}
         />
       </div>
       <InputMessage
         props={{
-          setReplyMessage,
+          isBlockedForMe,
+          isBlockedForUser,
           replyMessage,
+          setReplyMessage,
+          setMessageLoading,
         }}
       />
       <div className="aa absolute h-full w-full -z-1" />
-      <Calls />
-      {/* <div className="absolute p-2 bg-red-400 bottom-0 text-white  text-2xl z-40">
-        {SUserProfile._id}
-      </div> */}
-      {/* <ChatDetailsBar  /> */}
     </div>
   );
 }
 
 export default Body;
 
-function Calls() {
+export function Calls() {
   const SCallStates: TCallStates = useSelector(
     (state: any) => state.callStates
   );

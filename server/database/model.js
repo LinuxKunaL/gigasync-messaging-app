@@ -13,22 +13,37 @@ const UserSchema = new Schema({
     },
     about: { type: String, default: "I'm using GigaSync App" },
     avatar: { type: String },
+    blockedUsers: [{ type: Schema.Types.ObjectId, ref: "User" }],
   },
   isAvatar: { type: Boolean, default: false },
   avatarColor: { type: String },
   createdAt: { type: Date, default: Date.now },
   contacts: [{ type: Schema.Types.ObjectId, ref: "User" }],
   allChats: [{ type: Schema.Types.ObjectId, ref: "User" }],
+  favoritesChats: [{ type: Schema.Types.ObjectId, ref: "User" }],
   socketId: String,
   status: { type: String, default: "offline" },
   lastSeen: { type: Date, default: Date.now },
   mediaStatus: [
     {
-      createdAt: { type: Date, default: Date.now },
-      expiredAt: { type: Date },
+      createdAt: {
+        type: Date,
+        default: Date.now,
+      },
       type: { type: String },
       file: { type: String },
       caption: { type: String },
+    },
+  ],
+  files: [
+    {
+      url: { type: String },
+      type: { type: String },
+      name: { type: String },
+      size: { type: Number },
+      chat: { type: String },
+      chatId: { type: String },
+      timestamp: { type: Date, default: Date.now },
     },
   ],
 });
@@ -53,6 +68,11 @@ const ChatSchema = new Schema({
         text: {
           type: String,
         },
+        links: [
+          {
+            type: String,
+          },
+        ],
       },
       sender: { type: Schema.Types.ObjectId, ref: "User", required: true },
       receiver: { type: Schema.Types.ObjectId, ref: "User", required: true },
@@ -77,6 +97,7 @@ const ChatSchema = new Schema({
       },
     },
   ],
+  isMessageSeen: { type: Boolean, default: false },
 });
 
 const GroupsSchema = new Schema({
@@ -92,6 +113,9 @@ const GroupsSchema = new Schema({
     privacy: {
       isPhotoAllowed: { type: Boolean, default: true },
       isVideoAllowed: { type: Boolean, default: true },
+      isVoiceAllowed: { type: Boolean, default: true },
+      isAudioAllowed: { type: Boolean, default: true },
+      isFileAllowed: { type: Boolean, default: true },
       isChatAllowed: { type: Boolean, default: true },
     },
   },
@@ -115,9 +139,15 @@ const GroupsSchema = new Schema({
         text: {
           type: String,
         },
+        links: [
+          {
+            type: String,
+          },
+        ],
       },
       sender: { type: Schema.Types.ObjectId, ref: "User", required: true },
       replyMessage: {
+        id: { type: String },
         to: { type: Schema.Types.ObjectId, ref: "User" },
         message: {
           file: {
@@ -140,8 +170,13 @@ const GroupsSchema = new Schema({
   ],
 });
 
+const OtpSchema = new Schema({
+  email: { type: String },
+  otp: { type: String },
+  createdAt: { type: Date, default: Date.now },
+});
 
-
-export const ChatModel = mongoose.model("Chat", ChatSchema);
+export const Otp = mongoose.model("Otp", OtpSchema);
 export const User = mongoose.model("User", UserSchema);
+export const ChatModel = mongoose.model("Chat", ChatSchema);
 export const groups = mongoose.model("groups", GroupsSchema);

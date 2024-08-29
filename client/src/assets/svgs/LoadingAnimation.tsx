@@ -6,7 +6,7 @@ function LoadingAnimation({}: Props) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      className="size-14 ml-3"
+      className="size-9 sm:size-12 ml-3"
       viewBox="0 0 200 200"
     >
       <circle

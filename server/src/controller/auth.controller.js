@@ -2,8 +2,9 @@ import jwt from "jsonwebtoken";
 import config from "../../config/config.js";
 import fs from "fs";
 
-import { User } from "../../database/model.js";
+import { Otp, User } from "../../database/model.js";
 import { exec } from "child_process";
+import { sendGoogleMail } from "../utils/EmailSend.js";
 
 const me = async (req, res) => {
   const { userId } = req;
@@ -54,7 +55,7 @@ const register = async (req, res) => {
         exec(`mkdir src/data/user-${user._id}`, (err, stdout, stderr) => {
           if (err) console.log(err);
           exec(
-            `cd src/data/user-${user._id} && mkdir audios status documents images videos recordings`
+            `cd src/data/user-${user._id} && mkdir audios status files images videos recordings`
           );
         });
 
@@ -70,6 +71,38 @@ const register = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  User.findOne({ email: email }).then(async (user) => {
+    if (!user) return res.status(401).send("Email Not Found");
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    await Otp.create({
+      email: email,
+      otp,
+    });
+    sendGoogleMail(email, otp);
+    return res.status(200).send({ success: true });
+  });
+};
+
+const otpVerify = async (req, res) => {
+  const { email, otp } = req.body;
+  Otp.findOne({ email: email, otp: otp }).then(async (user) => {
+    if (!user) return res.status(401).send("Invalid OTP");
+    await Otp.deleteMany({ email: email });
+    return res.status(200).send({ success: true });
+  });
+};
+
+const changePassword = async (req, res) => {
+  const { email, newPassword } = req.body;
+  User.findOne({ email: email }).then((user) => {
+    user.password = newPassword;
+    user.save();
+    return res.status(200).send({ success: true });
+  });
+};
+
 const verifyDashboard = (req, res) => {
   const { userId } = req;
   User.findById(userId).then((user) => {
@@ -78,4 +111,12 @@ const verifyDashboard = (req, res) => {
   });
 };
 
-export { register, login, me, verifyDashboard };
+export {
+  me,
+  login,
+  register,
+  otpVerify,
+  changePassword,
+  forgotPassword,
+  verifyDashboard,
+};

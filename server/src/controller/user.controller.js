@@ -1,10 +1,14 @@
 import { ChatModel, groups, User } from "../../database/model.js";
 import { exec } from "child_process";
-import fs from "fs";
-import multer from "multer";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
+import { io } from "../server.js";
+
 import config from "../../config/config.js";
+import fs from "fs";
+import fse from "fs-extra";
+import multer from "multer";
+import mongoose from "mongoose";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -41,6 +45,7 @@ const searchProfiles = async (req, res) => {
       fullName: 1,
       avatarColor: 1,
       isAvatar: 1,
+      "profile.privacy.profilePhoto": 1,
     }
   );
   return res.status(200).send(user);
@@ -54,7 +59,8 @@ const handleContactOperations = async (req, res) => {
       contacts: 1,
     }).populate({
       path: "contacts",
-      select: "fullName username avatarColor isAvatar status lastSeen",
+      select:
+        "fullName username avatarColor isAvatar status lastSeen profile.privacy.profilePhoto",
     });
 
     if (contacts.length === 0) return res.status(200).send([]);
@@ -89,8 +95,114 @@ const handleContactOperations = async (req, res) => {
   }
 };
 
+const populateFavorite = async (req, res) => {
+  const { contacts } = req.body;
+  try {
+    const users = await User.find(
+      { _id: { $in: contacts } },
+      {
+        _id: 1,
+        username: 1,
+        fullName: 1,
+        avatarColor: 1,
+        isAvatar: 1,
+        status: 1,
+        lastSeen: 1,
+        "profile.privacy.profilePhoto": 1,
+      }
+    );
+
+    return res.status(200).send(users);
+  } catch (error) {
+    return res.status(500).send(error.message);
+  }
+};
+
+const clearChat = async (req, res) => {
+  const { me, to, operation } = req.body;
+  try {
+    await ChatModel.findOneAndUpdate(
+      {
+        chatWithin: { $all: [me, to] },
+      },
+      {
+        $set: {
+          messages: [],
+        },
+      }
+    );
+
+    const receiver = await User.findById(to);
+    const sender = await User.findById(me);
+
+    sender.files.map((file) => {
+      if (file.chatId === me + to) {
+        const paths = path.join(__dirname, "../", "data", file.url);
+        const exists = fs.existsSync(paths);
+        if (exists) fs.unlinkSync(paths, { recursive: true });
+      }
+    });
+
+    receiver.files.map((file) => {
+      if (file.chatId === to + me) {
+        const paths = path.join(__dirname, "../", "data", file.url);
+        const exists = fs.existsSync(paths);
+        if (exists) fs.unlinkSync(paths, { recursive: true });
+      }
+    });
+
+    receiver.files = receiver.files.filter(
+      (file) => file.chatId.toString() != (to + me).toString()
+    );
+
+    sender.files = sender.files.filter(
+      (file) => file.chatId.toString() != (me + to).toString()
+    );
+
+    if (operation === "delete") {
+      receiver.allChats = receiver.allChats.filter(
+        (item) => item.toString() !== me
+      );
+      sender.allChats = sender.allChats.filter(
+        (item) => item.toString() !== to
+      );
+
+      await ChatModel.findOneAndDelete({
+        chatWithin: { $all: [me, to] },
+      });
+
+      io.to(receiver.socketId).emit("loadChats");
+      io.to(sender.socketId).emit("loadChats");
+    }
+
+    await receiver.save();
+    await sender.save();
+
+    io.to(receiver.socketId).emit("initialMessage");
+    io.to(sender.socketId).emit("initialMessage");
+
+    return res.status(200).send(`Chat ${operation} successfully`);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send("Something went wrong");
+  }
+};
+
 const getProfileData = async (req, res) => {
+  const { userId } = req;
   const { _id } = req.body;
+
+  const me = await User.findById(userId, {
+    "profile.blockedUsers": 1,
+  });
+
+  const to = await User.findById(_id, {
+    "profile.blockedUsers": 1,
+  });
+
+  const isBlockedForMe = me?.profile?.blockedUsers?.includes(_id);
+  const isBlockedForUser = to?.profile?.blockedUsers?.includes(userId);
+
   const user = await User.findById(_id, {
     _id: 1,
     username: 1,
@@ -99,47 +211,109 @@ const getProfileData = async (req, res) => {
     isAvatar: 1,
     status: 1,
     lastSeen: 1,
+    socketId: 1,
+    "profile.privacy.profilePhoto": 1,
   });
-  return res.status(200).send(user);
+
+  return res
+    .status(200)
+    .send({ ...user.toJSON(), isBlockedForUser, isBlockedForMe });
 };
 
 const getAllChat = async (req, res) => {
   const { userId } = req;
+  try {
+    const { allChats } = await User.findOne(
+      { _id: userId },
+      {
+        allChats: 1,
+        _id: 0,
+      }
+    ).populate({
+      path: "allChats",
+      select:
+        "fullName username avatarColor isAvatar profile.privacy.profilePhoto",
+    });
 
-  const { allChats } = await User.findOne(
-    { _id: userId },
-    {
-      allChats: 1,
-      _id: 0,
+    const modifiedChats = await Promise.all(
+      allChats.map(async (user) => {
+        const getMessages = await ChatModel.findOne(
+          {
+            chatWithin: { $all: [user.id, userId] },
+          },
+          {
+            messages: 1,
+            _id: 0,
+          }
+        );
+        return {
+          message:
+            getMessages?.messages[getMessages?.messages.length - 1]?.message,
+          user,
+          timestamp:
+            getMessages?.messages[getMessages?.messages.length - 1]?.timestamp,
+        };
+      })
+    );
+
+    if (allChats.length <= 0) {
+      return res.status(200).send([]);
     }
-  ).populate({
-    path: "allChats",
-    select: "fullName username avatarColor isAvatar",
-  });
 
-  const modifiedChats = await Promise.all(
-    allChats.map(async (user) => {
-      const getMessages = await ChatModel.findOne(
-        {
-          chatWithin: { $all: [user.id] },
-        },
-        {
-          messages: 1,
-          _id: 0,
-        }
-      );
-      return {
-        message:
-          getMessages?.messages[getMessages?.messages.length - 1]?.message,
-        user,
-      };
-    })
-  );
-
-  if (allChats.length <= 0) {
-    return res.status(404).send([]);
+    return res.status(200).send(modifiedChats);
+  } catch (error) {
+    return res.status(500).send(error.message);
   }
-  return res.status(200).send(modifiedChats);
+};
+
+const toggleBlockContact = async (req, res) => {
+  const { to, block } = req.body;
+  const { userId } = req;
+
+  try {
+    const user = await User.findById(userId);
+    if (block) {
+      user.profile.blockedUsers.push(to);
+    } else {
+      user.profile.blockedUsers.splice(
+        user.profile.blockedUsers.indexOf(to),
+        1
+      );
+    }
+    const { socketId } = await User.findById(to);
+    io.to(socketId).emit("refreshBlockedUser", userId);
+    user.save();
+    return res.status(200).send({ success: true });
+  } catch (error) {
+    return res.status(500).send(error.message);
+  }
+};
+
+const getAllFiles = async (req, res) => {
+  const { userId } = req;
+
+  try {
+    const { files } = await User.findById(userId);
+
+    // const videos = fs.readdirSync(
+    //   path.join(__dirname, "../", "data", `user-${userId}`, "videos")
+    // );
+    // const images = fs.readdirSync(
+    //   path.join(__dirname, "../", "data", `user-${userId}`, "images")
+    // );
+    // const files = fs.readdirSync(
+    //   path.join(__dirname, "../", "data", `user-${userId}`, "files")
+    // );
+    // const audios = fs.readdirSync(
+    //   path.join(__dirname, "../", "data", `user-${userId}`, "audios")
+    // );
+
+    // console.log({ videos, images, files, audios });
+
+    return res.status(200).send(files);
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 const getChatWithinData = async (req, res) => {
@@ -153,18 +327,44 @@ const getChatWithinData = async (req, res) => {
     var media = {
       images: [],
       videos: [],
+      audios: [],
     };
+
+    var files = [];
+    var voices = [];
 
     chat?.messages.map((msg) => {
       if (msg.message.file.type === "image") {
         media.images.push(
-          `http://localhost:1000/api/default/messageImage?messageId=${msg._id}&filename=${msg.message.file.name}&me=${msg.sender}`
+          `${config.server.host}/api/default/getMedia/user-${msg.sender._id}/images/${msg.message.file.name}`
         );
       }
       if (msg.message.file.type === "video") {
         media.videos.push(
-          `http://localhost:1000/api/default/messageVideo/user-${msg.sender._id}/videos/${msg.message.file.name}`
+          `${config.server.host}/api/default/getMedia/user-${msg.sender._id}/videos/${msg.message.file.name}`
         );
+      }
+      if (msg.message.file.type === "audio") {
+        media.audios.push(
+          `${config.server.host}/api/default/getMedia/user-${msg.sender._id}/audios/${msg.message.file.name}`
+        );
+      }
+      if (msg.message.file.type === "file") {
+        files.push({
+          name: msg.message.file.name,
+          url: `${config.server.host}/api/default/getMedia/user-${msg.sender._id}/files/${msg.message.file.name}`,
+          size: msg.message.file.size,
+          date: msg.timestamp,
+          format: msg.message.file.name.split(".")[1],
+        });
+      }
+      if (msg.message.file.type === "recording") {
+        voices.push({
+          name: msg.message.file.name,
+          url: `${config.server.host}/api/default/getMedia/user-${msg.sender._id}/recordings/${msg.message.file.name}.mp3`,
+          size: msg.message.file.size,
+          date: msg.timestamp,
+        });
       }
     });
 
@@ -172,15 +372,93 @@ const getChatWithinData = async (req, res) => {
       _id: 1,
       username: 1,
       fullName: 1,
-      avatarColor: 1,
       isAvatar: 1,
-      profile: 1,
+      avatarColor: 1,
+      "profile.about": 1,
+      "profile.privacy.about": 1,
+      "profile.privacy.profilePhoto": 1,
     });
 
-    return res.status(200).send({ media, userTo });
+    const {
+      profile: { blockedUsers },
+    } = await User.findById(me, {
+      "profile.blockedUsers": 1,
+    });
+
+    const isBlocked = blockedUsers?.includes(to);
+
+    const links = chat?.messages.flatMap((msg) =>
+      msg.message.links.map((link) => link)
+    );
+
+    const modifiedData = {
+      media,
+      files,
+      voices,
+      links,
+      userTo,
+      isBlocked,
+    };
+
+    return res.status(200).send(modifiedData);
   } catch (error) {
     console.log(error);
     return res.status(500).send("Internal Server Error");
+  }
+};
+
+const groupSearch = async (req, res) => {
+  try {
+    const { query } = req.body;
+
+    if (query === "") return res.status(200).send([]);
+
+    const group = await groups.find(
+      {
+        "groupDetails.name": { $regex: query, $options: "i" },
+      },
+      { _id: 1, groupDetails: 1, groupMembers: 1, groupSetting: 1 }
+    );
+
+    const filetedGroup = group.filter(
+      (group) => group.groupSetting.private === false
+    );
+
+    return res.status(200).send(filetedGroup);
+  } catch (Err) {
+    return res.status(406).send(Err?.message);
+  }
+};
+
+const groupJoin = async (req, res) => {
+  const { userId } = req;
+  const { groupId } = req.body;
+
+  try {
+    const group = await groups.findById({ _id: groupId });
+
+    if (group.createdBy.toString() === userId) {
+      return res.status(406).send("You can't join your own group");
+    }
+
+    if (group.groupMembers.includes(userId)) {
+      return res.status(406).send("Already joined");
+    }
+
+    await groups.findOneAndUpdate(
+      {
+        _id: groupId,
+      },
+      {
+        $push: {
+          groupMembers: userId,
+        },
+      }
+    );
+
+    return res.status(200).send("Joined");
+  } catch (Err) {
+    return res.status(406).send(Err?.message);
   }
 };
 
@@ -208,7 +486,7 @@ const groupCreate = async (req, res) => {
       );
 
       exec(
-        `cd src/data/group-${group._id} && mkdir audios documents images videos recordings`
+        `cd src/data/group-${group._id} && mkdir audios files images videos recordings`
       );
 
       const filepathWithNewName = path.join(
@@ -251,6 +529,80 @@ const groupUpdate = async (req, res) => {
     );
     group.save();
     return res.status(200).send({ message: "Member deleted" });
+  }
+};
+
+const groupClearChat = async (req, res) => {
+  const { userId } = req;
+  const { groupId } = req.body;
+
+  try {
+    const group = await groups.findById({ _id: groupId });
+    if (group.createdBy.toString() === userId) {
+      await groups.findOneAndUpdate(
+        {
+          _id: groupId,
+        },
+        {
+          $set: {
+            messages: [],
+          },
+        }
+      );
+      exec(
+        `cd src/data/group-${groupId} && rm -rf audios files images videos recordings`
+      );
+
+      group.groupMembers.map(async (member) => {
+        const user = await User.findById(member.toString());
+        console.log(user.id);
+
+        user.files = user.files.filter((file) => file.id != groupId);
+        await user.save();
+      });
+
+      return res.status(200).send({ success: true });
+    } else {
+      return res.status(406).send("You can't clear chat");
+    }
+  } catch (error) {
+    return res.status(406).send(error);
+  }
+};
+
+const groupDelete = async (req, res) => {
+  const { userId } = req;
+  const { groupId } = req.body;
+  try {
+    const group = await groups.findById({ _id: groupId });
+    if (group.createdBy.toString() === userId) {
+      await groups.findByIdAndDelete({ _id: groupId });
+      exec(`cd src/data && rm -rf group-${groupId}`);
+      return res.status(200).send({ success: true });
+    } else {
+      return res.status(406).send("You can't delete this group");
+    }
+  } catch (error) {
+    return res.status(406).send(error);
+  }
+};
+
+const groupExit = async (req, res) => {
+  const { userId } = req;
+
+  try {
+    const { groupId } = req.body;
+    const group = await groups.findById({ _id: groupId });
+    if (group.groupMembers.includes(userId)) {
+      group.groupMembers = group.groupMembers.filter(
+        (member) => member.toString() !== userId
+      );
+      await group.save();
+
+      return res.status(200).send({ success: true });
+    }
+  } catch (error) {
+    return res.status(406).send(error);
   }
 };
 
@@ -302,7 +654,8 @@ const groupList = async (req, res) => {
       )
       .populate({
         path: "createdBy",
-        select: "fullName username avatarColor isAvatar status lastSeen",
+        select:
+          "fullName username avatarColor isAvatar status lastSeen profile.privacy.profilePhoto",
       });
 
     const imInGroups = await groups
@@ -314,7 +667,8 @@ const groupList = async (req, res) => {
       )
       .populate({
         path: "createdBy",
-        select: "fullName username avatarColor isAvatar status lastSeen",
+        select:
+          "fullName username avatarColor isAvatar status lastSeen profile.privacy.profilePhoto",
       });
 
     return res.status(200).send([...myGroups, ...imInGroups]);
@@ -329,10 +683,19 @@ const groupGetById = async (req, res) => {
   const { _id } = req.body;
 
   try {
-    const group = await groups.findOne({ _id }).populate({
-      path: "createdBy",
-      select: "fullName username avatarColor isAvatar status lastSeen",
-    });
+    const group = await groups
+      .findOne(
+        { _id },
+        {
+          messages: 0,
+          __v: 0,
+        }
+      )
+      .populate({
+        path: "createdBy",
+        select:
+          "fullName username avatarColor isAvatar status lastSeen profile.privacy.profilePhoto",
+      });
     if (!group) {
       return res.status(404).send("Group not found");
     }
@@ -353,26 +716,57 @@ const getGroupChatData = async (req, res) => {
   try {
     const group = await groups.findById(groupId).populate({
       path: "createdBy groupMembers",
-      select: "fullName username avatarColor isAvatar",
+      select:
+        "fullName username avatarColor isAvatar profile.privacy.profilePhoto",
     });
 
     var media = {
       images: [],
       videos: [],
+      audios: [],
     };
+
+    var files = [];
+    var voices = [];
 
     group?.messages.map((msg) => {
       if (msg.message.file.type === "image") {
         media.images.push(
-          `${config.server.host}/api/default/messageImage?filename=${msg.message.file.name}&_id=${groupId}&type=group`
+          `${config.server.host}/api/default/getMedia/group-${groupId}/images/${msg.message.file.name}`
         );
       }
       if (msg.message.file.type === "video") {
         media.videos.push(
-          `${config.server.host}/api/default/messageVideo/group-${groupId}/videos/${msg.message.file.name}`
+          `${config.server.host}/api/default/getMedia/group-${groupId}/videos/${msg.message.file.name}`
         );
       }
+      if (msg.message.file.type === "audio") {
+        media.audios.push(
+          `${config.server.host}/api/default/getMedia/group-${groupId}/audios/${msg.message.file.name}`
+        );
+      }
+      if (msg.message.file.type === "file") {
+        files.push({
+          name: msg.message.file.name,
+          url: `${config.server.host}/api/default/getMedia/group-${groupId}/files/${msg.message.file.name}`,
+          size: msg.message.file.size,
+          date: msg.timestamp,
+          format: msg.message.file.name.split(".")[1],
+        });
+      }
+      if (msg.message.file.type === "recording") {
+        voices.push({
+          name: msg.message.file.name,
+          url: `${config.server.host}/api/default/getMedia/group-${groupId}/recordings/${msg.message.file.name}.mp3`,
+          size: msg.message.file.size,
+          date: msg.timestamp,
+        });
+      }
     });
+
+    const links = group?.messages.flatMap((msg) =>
+      msg.message.links.map((link) => link)
+    );
 
     const modifiedData = {
       _id: group?._id,
@@ -382,6 +776,9 @@ const getGroupChatData = async (req, res) => {
       createdBy: group?.createdBy,
       createdAt: group?.createdAt,
       media,
+      files,
+      voices,
+      links,
     };
 
     return res.status(200).send(modifiedData);
@@ -426,6 +823,8 @@ const mediaStatus = async (req, res) => {
         },
       });
 
+      io.emit("status-refresh");
+
       return res.status(200).send("Status uploaded successfully");
     } catch (error) {
       return res.status(500).send("Internal Server Error");
@@ -436,35 +835,38 @@ const mediaStatus = async (req, res) => {
 const getMediaStatus = async (req, res) => {
   const { userId } = req;
   const { contacts } = req.body;
-
+  const projection = {
+    mediaStatus: 1,
+    username: 1,
+    fullName: 1,
+    avatarColor: 1,
+    isAvatar: 1,
+    "profile.privacy.profilePhoto": 1,
+    "profile.privacy.status": 1,
+  };
   try {
     const contactStatus = await User.find(
       { _id: { $in: contacts } },
-      {
-        mediaStatus: 1,
-        username: 1,
-        fullName: 1,
-        avatarColor: 1,
-        isAvatar: 1,
-      }
+      projection
     );
 
-    const myStatus = await User.findOne(
-      { _id: userId },
-      { mediaStatus: 1, username: 1, fullName: 1, avatarColor: 1, isAvatar: 1 }
-    );
+    const myStatus = await User.findOne({ _id: userId }, projection);
 
     const AllStatus = [myStatus, ...contactStatus];
 
-    if (contactStatus.length > 0) {
+    if (AllStatus.length > 0) {
       const modifiedStatus = AllStatus.filter(
-        (item) => item.mediaStatus.length > 0
+        (item) =>
+          item.mediaStatus.length > 0 && item.profile.privacy.status != false
       );
 
-      return res.status(200).send(modifiedStatus);
+      if (modifiedStatus.length > 0) {
+        return res.status(200).send(modifiedStatus);
+      } else {
+        return res.status(200).send([]);
+      }
     }
   } catch (error) {
-    console.log(error);
     return res.status(500).send("Internal Server Error");
   }
 };
@@ -472,34 +874,87 @@ const getMediaStatus = async (req, res) => {
 const deleteMediaStatus = async (req, res) => {
   const { userId } = req;
   const { index } = req.body;
+  try {
+    const user = await User.findById(userId);
 
-  const user = await User.findById(userId);
+    fs.unlinkSync(
+      path.join(
+        __dirname,
+        `../data/user-${user._id}/status/${user.mediaStatus[index].file}`
+      ),
+      { recursive: true }
+    );
 
-  user.mediaStatus = user.mediaStatus.filter((item, i) => {
-    if (i !== index) {
-      return item;
-    }
-  });
+    user.mediaStatus = user.mediaStatus.filter((item, i) => {
+      if (i !== index) {
+        return item;
+      }
+    });
 
-  await user.save();
+    await user.save();
 
-  return res.status(200).send("Status deleted successfully");
+    return res.status(200).send("Status deleted successfully");
+  } catch (error) {
+    return res.status(500).send("Internal Server Error");
+  }
+};
+
+const autoDeleteMediaStatus = async () => {
+  const now = new Date();
+  // const expirationTime = 1 * 1000;
+  const expirationTime = 24 * 60 * 60 * 1000;
+  try {
+    const users = await User.find({
+      "mediaStatus.createdAt": { $lte: new Date(now - expirationTime) },
+    });
+
+    users.map(async (user) => {
+      user.mediaStatus.some((item) => {
+        const filePath = path.join(
+          __dirname + `../data/user-${user._id}/status/${item.file}`
+        );
+
+        fs.existsSync(filePath) && fs.unlinkSync(filePath, { recursive: true });
+      });
+
+      user.mediaStatus = user.mediaStatus.filter(
+        (item) => now - item.createdAt < expirationTime
+      );
+      // console.log(user.mediaStatus);
+
+      await user.save();
+      console.log(`Deleted status for user ${user._id}`);
+      io.to(user.socketId).emit("status-refresh");
+    });
+  } catch (error) {
+    console.log("Error cleaning up expired mediaStatus items:", error);
+  }
 };
 
 export {
   groupList,
+  groupJoin,
   getAllChat,
+  clearChat,
+  groupExit,
   groupCreate,
+  groupDelete,
+  getAllFiles,
   groupUpdate,
   mediaStatus,
+  groupSearch,
   groupGetById,
   profileUpdate,
+  groupClearChat,
   getMediaStatus,
   searchProfiles,
   getProfileData,
   getGroupChatData,
   getChatWithinData,
+  toggleBlockContact,
+  populateFavorite,
   deleteMediaStatus,
   groupSettingUpdate,
+  autoDeleteMediaStatus,
   handleContactOperations,
 };

@@ -15,6 +15,12 @@ const config = {
     url: process.env.MONGODB_URL,
     name: process.env.MONGODB_NAME,
   },
+  googleSMTP: {
+    host: process.env.GOOGLE_SMTP_HOST,
+    port: process.env.GOOGLE_SMTP_PORT,
+    user: process.env.GOOGLE_SMTP_USER,
+    pass: process.env.GOOGLE_SMTP_PASS,
+  },
 };
 
 export default config;

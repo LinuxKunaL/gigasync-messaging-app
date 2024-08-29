@@ -16,6 +16,7 @@ class groupChatSocket {
      */
     this.socket.on("selectGroup", this.selectGroup.bind(this));
     this.socket.on("sendMessage-group", this.sendMessage.bind(this));
+    this.socket.on("deleteMessage-group", this.deleteMessage.bind(this));
     //━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   }
 
@@ -36,7 +37,8 @@ class groupChatSocket {
       )
       .populate({
         path: "messages.sender messages.replyMessage.to",
-        select: "fullName username avatarColor isAvatar",
+        select:
+          "fullName username avatarColor isAvatar profile.privacy.profilePhoto",
         options: { strictPopulate: false },
       });
 
@@ -44,7 +46,7 @@ class groupChatSocket {
   }
 
   async sendMessage(data) {
-    const { groupId, message, sender } = data;
+    const { groupId, message, sender, replyMessage } = data;
     const { file } = message;
 
     var fileData = {
@@ -55,6 +57,27 @@ class groupChatSocket {
 
     if (file.type !== "text") {
       fileData = uploadFile(file.data, groupId, "group");
+
+      const folder = {
+        file: "files",
+        image: "images",
+        video: "videos",
+        audio: "audios",
+        recording: "recordings",
+      };
+
+      const user = await User.findById({ _id: sender });
+      user.files.push({
+        url: `/api/default/getMedia/group-${groupId}/${folder[file.type]}/${
+          fileData.name
+        }`,
+        size: fileData.size,
+        type: file.type,
+        name: fileData.name,
+        chat: "group",
+        _id: groupId,
+      });
+      await user.save();
     }
 
     const newMessage = {
@@ -66,8 +89,10 @@ class groupChatSocket {
           size: fileData.size,
         },
         text: message.text,
+        links: message.links,
       },
       sender,
+      replyMessage,
     };
 
     const group = await groups.findById({ _id: groupId });
@@ -81,6 +106,7 @@ class groupChatSocket {
         fullName: 1,
         avatarColor: 1,
         isAvatar: 1,
+        "profile.privacy.profilePhoto": 1,
       }
     );
 
@@ -93,6 +119,31 @@ class groupChatSocket {
       groupId,
       message: populateMessage,
     });
+  }
+
+  async deleteMessage(data) {
+    const { groupId, messageId } = data;
+    try {
+      await groups.findOneAndUpdate(
+        {
+          _id: groupId,
+          "messages._id": messageId,
+        },
+        {
+          $set: {
+            "messages.$.message.text": "message deleted",
+            "messages.$.message.file.type": "del",
+            "messages.$.message.file.name": null,
+            "messages.$.message.file.size": null,
+          },
+        }
+      );
+      this.selectGroup({
+        groupId,
+      });
+    } catch (error) {
+      console.log(error);
+    }
   }
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 }

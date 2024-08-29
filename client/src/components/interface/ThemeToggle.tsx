@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { refresh } from "../../app/Redux";
 import { MdSunny } from "react-icons/md";
@@ -11,7 +11,6 @@ function ThemeToggle({}: Props) {
 
   const toggleCss =
     "bg-gradient-to-tl from-cyan-500 to-cyan-300 dark:from-bunker-910 dark:to-bunker-900 w-12 -z-1 h-12 rounded-lg";
-
 
   useEffect(() => {
     const theme = localStorage.getItem("theme");
@@ -33,26 +32,24 @@ function ThemeToggle({}: Props) {
   };
 
   return (
-    // <div className=" absolute bottom-0 right-0 z-30">
-      <div className="dark:bg-bunker-950 bg-bunker-50 p-2 rounded-lg flex flex-col w-16 relative">
-        <button
-          className={`${
-            darkModeState ? null : toggleCss
-          } relative text-bunker-50 w-full h-12 flex items-center justify-center`}
-          onClick={() => darkModeHandler("light")}
-        >
-          <MdSunny />
-        </button>
-        <button
-          className={`${
-            darkModeState ? toggleCss : null
-          } relative text-bunker-600 w-full h-12 flex items-center justify-center`}
-          onClick={() => darkModeHandler("dark")}
-        >
-          <IoMdMoon />
-        </button>
-      </div>
-    // </div>
+    <div className="dark:bg-bunker-950 bg-bunker-50 p-2 xs:p-2 rounded-lg flex xs:flex-col xs:w-16 w-min relative">
+      <button
+        className={`${
+          darkModeState ? null : toggleCss
+        } relative text-bunker-50 w-12 -z-1 xs:w-full h-9 xs:h-12 flex items-center justify-center`}
+        onClick={() => darkModeHandler("light")}
+      >
+        <MdSunny />
+      </button>
+      <button
+        className={`${
+          darkModeState ? toggleCss : null
+        } relative text-bunker-600  w-12 -z-1 xs:w-full h-9 xs:h-12 flex items-center justify-center`}
+        onClick={() => darkModeHandler("dark")}
+      >
+        <IoMdMoon />
+      </button>
+    </div>
   );
 }
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { MdCopyAll, MdEdit, MdSave } from "react-icons/md";
+import { MdCopyAll, MdEdit, MdReplay, MdSave } from "react-icons/md";
 import { handleCatchError } from "../../../../utils/ErrorHandle";
 import { toastSuccess } from "../../../../app/Toast";
 import { useSelector } from "react-redux";
@@ -9,6 +9,10 @@ import Switch from "../../../../components/interface/Switch";
 import ToolTip from "../../../../components/interface/Tooltip";
 import api from "../../../../utils/api";
 import dataURLtoBlob from "../../../../utils/dataURLtoBlob";
+import HrLine from "../../../../components/interface/HrLine";
+import ThemeToggle from "../../../../components/interface/ThemeToggle";
+import Avatar from "../../../../components/interface/Avatar";
+import { Link } from "react-router-dom";
 
 type Props = {};
 type ProfileData = {
@@ -81,9 +85,11 @@ function Profile({}: Props) {
   };
 
   return (
-    <>
+    <div className="flex flex-col gap-4 h-full">
       <div className="flex justify-between items-center">
-        <h1 className="text-xl font-semibold dark:text-bunker-300">Profile</h1>
+        <h1 className="text-lg xs:text-xl font-semibold dark:text-bunker-300">
+          Profile
+        </h1>
         {isEditProfile ? (
           <ToolTip id="edit-profile" className="z-10" content="edit profile">
             <Icon
@@ -109,42 +115,31 @@ function Profile({}: Props) {
           </ToolTip>
         )}
       </div>
-      <div className="pt-3 flex flex-row items-center justify-center gap-3 w-full">
-        <div className="w-max">
-          <ProfileAvatar
-            data={profileData}
-            activeEditIcon={isEditProfile}
-            htmlFor="avatar"
-            theme={profileData.avatarColor}
-          />
-          <input onChange={handleUploadAvatar} type="file" id="avatar" hidden />
-        </div>
-        <div className="w-full">
-          <input
-            type="text"
-            className={`${
-              isEditProfile ? "bg-transparent p-0" : "p-1 bg-bunker-900"
-            } outline-none rounded-md w-full text-lg font-normal dark:text-bunker-50 text-bunker-600`}
-            disabled={isEditProfile}
-            defaultValue={profileData.fullName}
-            name="fullName"
-            onChange={(event) =>
-              setModifiedData({
-                ...modifiedData,
-                [event.target.name]: event.target.value,
-              })
-            }
-          />
-          <span className="flex items-center text-bunker-400 text-sm">
-            @
+      <div className="overflow-y-auto flex flex-col gap-3 sm:gap-4 h-full scrollbar-bunker">
+        <div className="sm:pt-3 flex flex-row items-center justify-center gap-2 sm:gap-3 w-full">
+          <div className="w-max">
+            <ProfileAvatar
+              data={profileData}
+              activeEditIcon={isEditProfile}
+              htmlFor="avatar"
+              theme={profileData.avatarColor}
+            />
+            <input
+              onChange={handleUploadAvatar}
+              type="file"
+              id="avatar"
+              hidden
+            />
+          </div>
+          <div className="w-full">
             <input
               type="text"
               className={`${
                 isEditProfile ? "bg-transparent p-0" : "p-1 bg-bunker-900"
-              } outline-none w-full rounded-md`}
-              defaultValue={profileData.username}
+              } outline-none rounded-md w-full text-lg font-normal dark:text-bunker-50 text-bunker-600`}
               disabled={isEditProfile}
-              name="username"
+              defaultValue={profileData.fullName}
+              name="fullName"
               onChange={(event) =>
                 setModifiedData({
                   ...modifiedData,
@@ -152,140 +147,175 @@ function Profile({}: Props) {
                 })
               }
             />
-            <Icon variant="transparent">
-              <MdCopyAll className=" cursor-pointer" />
-            </Icon>
-          </span>
-        </div>
-      </div>
-      <div className="flex flex-col gap-1">
-        <h2 className="text-lg font-semibold dark:text-bunker-50 text-bunker-600">
-          About
-        </h2>
-        <p className="text-bunker-400 text-sm flex items-center gap-2">
-          <textarea
-            className={`${
-              isEditProfile ? "bg-transparent" : "p-1 bg-bunker-900"
-            } outline-none w-full rounded-md text-xs no-scrollbar`}
-            name="about"
-            disabled={isEditProfile}
-            onChange={(event) =>
-              setModifiedData({
-                ...modifiedData,
-                profile: {
-                  ...modifiedData.profile,
-                  about: event.target.value,
-                },
-              })
-            }
-          >
-            {!profileData?.profile?.about
-              ? "No About , Add some information about yourself"
-              : profileData?.profile?.about}
-          </textarea>
-        </p>
-      </div>
-      <hr className="dark:border-bunker-800 border-bunker-200" />
-      <div className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold dark:text-bunker-50 text-bunker-600">
-          Privacy
-        </h2>
-        <div className="flex flex-col gap-3">
-          <div className="flex gap-3 items-center">
-            <div className="flex gap-1 flex-col">
-              <span className="dark:text-bunker-200 text-bunker-600 font-semibold text-sm flex items-center gap-2">
-                Profile Photo
-              </span>
-              <p className="text-bunker-400 text-xs flex items-center gap-2">
-                turn on this setting to whether your contact can see your
-                profile or not.
-              </p>
-            </div>
-            <Switch
-              onChange={(event: any) => {
-                setModifiedData((prevData: any) => ({
-                  ...prevData,
-                  profile: {
-                    ...prevData.profile,
-                    privacy: {
-                      ...prevData.profile?.privacy,
-                      profilePhoto: event.target.checked,
-                    },
-                  },
-                }));
-              }}
-              isCheck={profileData.profile?.privacy?.profilePhoto}
-              disabled={isEditProfile}
-              size="small"
-              name="profile-photo"
-              id="ph"
-            />
+            <span className="flex items-center text-bunker-400 text-sm">
+              @
+              <input
+                type="text"
+                className={`${
+                  isEditProfile ? "bg-transparent p-0" : "p-1 bg-bunker-900"
+                } outline-none w-full rounded-md`}
+                defaultValue={profileData.username}
+                disabled={isEditProfile}
+                name="username"
+                onChange={(event) =>
+                  setModifiedData({
+                    ...modifiedData,
+                    [event.target.name]: event.target.value,
+                  })
+                }
+              />
+              <Icon
+                onClick={() => {
+                  navigator.clipboard.writeText(profileData.username as string);
+                  toastSuccess("Username copied to clipboard");
+                }}
+                variant="transparent"
+              >
+                <MdCopyAll className=" cursor-pointer" />
+              </Icon>
+            </span>
           </div>
-
-          <div className="flex gap-3 items-center">
-            <div className="flex gap-1 flex-col">
-              <span className="dark:text-bunker-200 text-bunker-600 font-semibold text-sm flex items-center gap-2">
-                About
-              </span>
-              <p className="text-bunker-400 text-xs flex items-center gap-2">
-                Note : turn on this setting to whether your contact can see
-                about status or not.
-              </p>
-            </div>
-            <Switch
-              onChange={(event: any) => {
-                setModifiedData((prevData: any) => ({
-                  ...prevData,
-                  profile: {
-                    ...prevData.profile,
-                    privacy: {
-                      ...prevData.profile?.privacy,
-                      about: event.target.checked,
-                    },
-                  },
-                }));
-              }}
-              isCheck={profileData.profile?.privacy?.about}
-              disabled={isEditProfile}
-              size="small"
+        </div>
+        <div className="flex flex-col gap-1">
+          <h2 className="text-md sm:text-lg font-semibold dark:text-bunker-50 text-bunker-600">
+            About
+          </h2>
+          <p className="text-bunker-400 text-sm flex items-center gap-2">
+            <textarea
+              className={`${
+                isEditProfile ? "bg-transparent" : "p-1 bg-bunker-900"
+              } outline-none w-full rounded-md text-xs no-scrollbar`}
               name="about"
-              id="ab"
-            />
-          </div>
-
-          <div className="flex gap-3 items-center">
-            <div className="flex gap-1 flex-col">
-              <span className="dark:text-bunker-200 text-bunker-600 font-semibold text-sm flex items-center gap-2">
-                Status
-              </span>
-              <p className="text-bunker-400 text-xs flex items-center gap-2">
-                Note : turn on this setting to whether your contact can see your
-                status or not.
-              </p>
-            </div>
-            <Switch
-              onChange={(event: any) => {
-                setModifiedData((prevData: any) => ({
-                  ...prevData,
-                  profile: {
-                    ...prevData.profile,
-                    privacy: {
-                      ...prevData.profile?.privacy,
-                      status: event.target.checked,
-                    },
-                  },
-                }));
-              }}
-              isCheck={profileData.profile?.privacy?.status}
               disabled={isEditProfile}
-              size="small"
-              name="status"
-              id="st"
-            />
+              onChange={(event) =>
+                setModifiedData({
+                  ...modifiedData,
+                  profile: {
+                    ...modifiedData.profile,
+                    about: event.target.value,
+                  },
+                })
+              }
+            >
+              {!profileData?.profile?.about
+                ? "No About , Add some information about yourself"
+                : profileData?.profile?.about}
+            </textarea>
+          </p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <h2 className="text-md sm:text-lg font-semibold dark:text-bunker-50 text-bunker-600">
+            Privacy
+          </h2>
+          <div className="flex flex-col gap-3">
+            <div className="flex gap-3 items-center">
+              <div className="flex gap-1 flex-col">
+                <span className="dark:text-bunker-300 text-bunker-600 font-medium text-sm flex items-center gap-2">
+                  Profile Photo
+                </span>
+                <p className="text-bunker-400 text-xs flex items-center gap-2">
+                  turn on this setting to whether your contact can see your
+                  profile or not.
+                </p>
+              </div>
+              <Switch
+                onChange={(event: any) => {
+                  setModifiedData((prevData: any) => ({
+                    ...prevData,
+                    profile: {
+                      ...prevData.profile,
+                      privacy: {
+                        ...prevData.profile?.privacy,
+                        profilePhoto: event.target.checked,
+                      },
+                    },
+                  }));
+                }}
+                isCheck={profileData.profile?.privacy?.profilePhoto}
+                disabled={isEditProfile}
+                size="small"
+                name="profile-photo"
+                id="ph"
+              />
+            </div>
+
+            <div className="flex gap-3 items-center">
+              <div className="flex gap-1 flex-col">
+                <span className="dark:text-bunker-300 text-bunker-600 font-medium text-sm flex items-center gap-2">
+                  About
+                </span>
+                <p className="text-bunker-400 text-xs flex items-center gap-2">
+                  Note : turn on this setting to whether your contact can see
+                  about status or not.
+                </p>
+              </div>
+              <Switch
+                onChange={(event: any) => {
+                  setModifiedData((prevData: any) => ({
+                    ...prevData,
+                    profile: {
+                      ...prevData.profile,
+                      privacy: {
+                        ...prevData.profile?.privacy,
+                        about: event.target.checked,
+                      },
+                    },
+                  }));
+                }}
+                isCheck={profileData.profile?.privacy?.about}
+                disabled={isEditProfile}
+                size="small"
+                name="about"
+                id="ab"
+              />
+            </div>
+
+            <div className="flex gap-3 items-center">
+              <div className="flex gap-1 flex-col">
+                <span className="dark:text-bunker-300 text-bunker-600 font-medium text-sm flex items-center gap-2">
+                  Status
+                </span>
+                <p className="text-bunker-400 text-xs flex items-center gap-2">
+                  Note : turn on this setting to whether your contact can see
+                  your status or not.
+                </p>
+              </div>
+              <Switch
+                onChange={(event: any) => {
+                  setModifiedData((prevData: any) => ({
+                    ...prevData,
+                    profile: {
+                      ...prevData.profile,
+                      privacy: {
+                        ...prevData.profile?.privacy,
+                        status: event.target.checked,
+                      },
+                    },
+                  }));
+                }}
+                isCheck={profileData.profile?.privacy?.status}
+                disabled={isEditProfile}
+                size="small"
+                name="status"
+                id="st"
+              />
+            </div>
           </div>
         </div>
+        <Link
+          className="font-normal text-bunker-200 underline hover:text-cyan-400 transition-all text-sm cursor-pointer"
+          to="/forgotPassword"
+        >
+          Forgot password
+        </Link>
+        <div className="flex flex-col gap-2">
+          <h2 className="text-md sm:text-lg font-semibold dark:text-bunker-50 text-bunker-600">
+            Theme
+          </h2>
+          <ThemeToggle />
+        </div>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -328,11 +358,13 @@ const ProfileAvatar = ({
   return (
     <div className="size-14 select-none rounded-full flex items-center justify-center text-bunker-50 font-semibold relative overflow-hidden">
       {data.isAvatar ? (
-        <img
-          className="w-full h-full absolute rounded-full"
-          alt=""
-          src={`${process.env.REACT_APP_BACKEND_HOST}/api/default/avatar?id=${data._id}&type=user`}
-        />
+        <div className="object-cover rounded-full flex justify-center items-center">
+          <img
+            className=" absolute rounded-full"
+            alt=""
+            src={`${process.env.REACT_APP_BACKEND_HOST}/api/default/avatar?id=${data._id}&type=user`}
+          />
+        </div>
       ) : (
         <div
           className={`size-14 select-none bg-gradient-to-bl rounded-full flex items-center justify-center text-bunker-50 font-semibold relative overflow-hidden ${colorVariant[theme]}`}

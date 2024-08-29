@@ -1,11 +1,4 @@
-import Avatar from "../../../../../../components/interface/Avatar";
-import convertTime from "../../../../../../utils/ConvertTime";
-import {
-  MdClose,
-  MdSearch,
-  MdMoreVert,
-  MdOutlineAccessTime,
-} from "react-icons/md";
+import { MdClose, MdSearch, MdMoreVert } from "react-icons/md";
 import { useDispatch } from "react-redux";
 import {
   insertCurrentChatData,
@@ -15,25 +8,25 @@ import {
 import { TGroup } from "../../../../../../app/Types";
 
 import Icon from "../../../../../../components/interface/Icon";
+import GroupAvatar from "../../../../../../components/interface/GroupAvatar";
+import { memo } from "react";
 
 type Props = {
   props: {
+    isSearchVisible: boolean;
+    setIsSearchVisible: (param: any) => void;
     selectedGroup: TGroup | undefined;
   };
 };
 
 function NavigationBar({ props }: Props) {
   const dispatch = useDispatch();
-
   return (
-    <div className="flex sticky z-20 top-0 flex-row justify-between items-center p-4 dark:bg-bunker-910/50 bg-bunker-100/50 backdrop-blur-md">
+    <div className="flex sticky z-20 top-0 flex-row justify-between items-center p-2 sm:p-4 dark:bg-bunker-910/50 bg-bunker-50 dark:backdrop-blur-md">
       <div className="flex gap-2 items-center">
-        <img
-          className="size-14 rounded-full"
-          src={`${process.env.REACT_APP_BACKEND_HOST}/api/default/avatar?id=${props.selectedGroup?._id}&type=group`}
-        />
-        <div>
-          <h1 className="text-lg font-normal dark:text-bunker-50 text-bunker-600">
+        <GroupAvatar groupId={props.selectedGroup?._id as string} />
+        <div className="flex flex-col gap-1">
+          <h1 className="text-sm sm:text-lg font-medium dark:text-bunker-50 text-bunker-600 truncate">
             {props?.selectedGroup?.groupDetails?.name}
           </h1>
           <p className="text-xs flex gap-2 items-center !transition-none text-cyan-600 font-semibold">
@@ -43,8 +36,12 @@ function NavigationBar({ props }: Props) {
           </p>
         </div>
       </div>
-      <div className="flex gap-3 items-center">
-        <Icon variant="transparent">
+      <div className="flex gap-2 sm:gap-3 items-center">
+        <Icon
+          active={props?.isSearchVisible}
+          onClick={() => props?.setIsSearchVisible(!props?.isSearchVisible)}
+          variant="transparent"
+        >
           <MdSearch />
         </Icon>
         <Icon
@@ -75,4 +72,4 @@ function NavigationBar({ props }: Props) {
   );
 }
 
-export default NavigationBar;
+export default memo(NavigationBar);

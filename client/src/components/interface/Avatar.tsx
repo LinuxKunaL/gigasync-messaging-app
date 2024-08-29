@@ -1,5 +1,7 @@
+import { TUser } from "../../app/Types";
+
 type Props = {
-  data?: any;
+  data?: TUser;
   border?: boolean;
   rounded?: boolean;
   className?: string;
@@ -29,26 +31,25 @@ function Avatar({ data, rounded, className, size }: Props) {
   };
 
   const sizeVariant: any = {
-    xs: "w-4 h-4 text-xs",
-    sm: "w-6 h-6 text-sm",
-    md: "w-8 h-8 text-sm",
-    lg: "w-10 h-10 text-sm",
-    xl: "w-12 h-12 text-md",
-    xxl: "w-14 h-14 text-md",
+    xs: "size-4 text-xs",
+    sm: "size-6 text-sm",
+    md: "size-8 text-sm",
+    lg: "size-10 text-sm",
+    xl: "size-12 text-md",
+    xxl: "sm:size-14 sm:text-md size-10 text-sm",
     full: "w-full h-full text-lg",
   };
-
   return (
     <div
-      className={`${sizeVariant[size]} border- ${className} ${size} ${
-        colorVariant[data?.avatarColor]
+      className={`${sizeVariant[size]} ${className} ${
+        colorVariant[data?.avatarColor as string]
       } select-none ${
         rounded ? "rounded-full" : "rounded-lg"
       } flex items-center justify-center text-bunker-50 font-semibold relative overflow-hidden`}
     >
-      {data?.isAvatar ? (
+      {data?.isAvatar && data?.profile?.privacy?.profilePhoto ? (
         <img
-          className={`w-full h-full absolute ${
+          className={`w-full h-full object-cover absolute ${
             rounded ? "rounded-full" : "rounded-lg"
           }`}
           alt=""
@@ -59,7 +60,7 @@ function Avatar({ data, rounded, className, size }: Props) {
           className={`${sizeVariant[size]} select-none bg-gradient-to-bl ${
             rounded ? "rounded-full" : "rounded-lg"
           } flex items-center justify-center text-bunker-50 font-semibold relative overflow-hidden ${
-            colorVariant[data?.avatarColor]
+            colorVariant[data?.avatarColor as string]
           }`}
         >
           {data?.fullName?.slice(0, 2).toUpperCase()}

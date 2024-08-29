@@ -1,15 +1,23 @@
 const convertTime = (param: Date, type: "full" | "day"): string => {
   if (type == "full") {
-    return new Date(param).toLocaleString();
+    const date = new Date(param).toLocaleString();
+    if (date != "Invalid Date") {
+      return date;
+    }
   }
 
   if (type == "day") {
-    return new Date(param).toLocaleTimeString("en-US", {
+    const date = new Date(param).toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "numeric",
       hour12: true,
     });
+
+    if (date != "Invalid Date") {
+      return date;
+    }
   }
+
   return "";
 };
 
