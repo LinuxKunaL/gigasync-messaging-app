@@ -1,5 +1,4 @@
-# gigaSync
-![logo](/images/Logo.svg)
+![logo](/images/Logo.svg)<br>
 gigaSync is a real-time messaging application inspired by WhatsApp, built with a modern tech stack to provide a seamless and responsive user experience. It includes features such as real-time messaging, user authentication, and Google login.
 
 ## Features
