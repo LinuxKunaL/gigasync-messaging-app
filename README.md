@@ -10,6 +10,7 @@ gigaSync is a real-time messaging application inspired by WhatsApp, built with a
 - Responsive design with Tailwind CSS
 - State management with Redux
 - MongoDB for data storage
+- Manage user storage ex. media and files 
 
 ## Screenshot
 ![Demo screenshot](/images/Screenshot-1.png)
