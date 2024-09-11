@@ -42,4 +42,4 @@ server.listen(config.server.port, () => {
   console.log(`Server started on port ${config.server.port}`);
 });
 
-module.exports = server;
+module.exports = app;
