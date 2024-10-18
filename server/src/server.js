@@ -42,4 +42,6 @@ server.listen(config.server.port, () => {
   console.log(`Server started on port ${config.server.port}`);
 });
 
-module.exports = app;
+//module.exports = app;
+export default app;
+// Just This Minor Change Needed for running backend
